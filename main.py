@@ -49,5 +49,13 @@ def get_user_by_email(user_email, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Email not registered")
     
     return db_user
+
+@app.get("/get_users/")
+def get_all_users(db: Session = Depends(get_db)):
+    db_users = crud.get_users(db=db)
     
+    if not db_users:
+        raise HTTPException(status_code=400, detail="Not Users in aplication registered yet")
+    
+    return db_users
 # ******************************************************************************************************************

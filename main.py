@@ -58,4 +58,8 @@ def get_all_users(db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Not Users in aplication registered yet")
     
     return db_users
+
+@app.get("/test/")
+def get_test():
+    return "Hola mancaperros"
 # ******************************************************************************************************************

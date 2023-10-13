@@ -2,6 +2,7 @@ from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
 from database import Base
+from pydantic import BaseModel
 
 
 class User(Base):
@@ -48,3 +49,16 @@ class Exsercise(Base):
     rutine_id = Column(Integer, ForeignKey("rutines.rutine_id"))
     
     exercise_owner = relationship("Rutine", back_populates="exercises")
+
+
+# ************************** For logging purposes **************************
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+class TokenData(BaseModel):
+    username: str | None = None
+
+class UserInDB(User):
+    hashed_password = Column(String, unique=False, index=True)
+# **************************************************************************

@@ -9,6 +9,7 @@ class User(Base):
     __tablename__ = "users"
     
     user_name = Column(String, unique=False, index=True)
+    hashed_password = Column(String, unique=False, index=True)
     email = Column(String, unique=True, index=True)
     user_id = Column(Integer, primary_key=True, index=True)
     
@@ -59,6 +60,6 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     username: str | None = None
 
-class UserInDB(User):
-    hashed_password = Column(String, unique=False, index=True)
+# class UserInDB(User):
+#     hashed_password = Column(String, unique=False, index=True)
 # **************************************************************************

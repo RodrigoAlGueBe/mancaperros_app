@@ -1,0 +1,2 @@
+[nbdev]
+mslib = mslib._modidx:d

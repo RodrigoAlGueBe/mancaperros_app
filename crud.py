@@ -18,20 +18,16 @@ fake_users_db = {   #Rod 20/08/2023 added fake user for testing propouses
 
 #********************************* GET METHODS *********************************
 #------------------------- User -------------------------
-def get_user(db: Session, user_id: int):
-    return db.query(models.User).filter(models.User.id == user_id).first()
+def get_user_by_id(db: Session, user_id: int):
+    return db.query(models.User).filter(models.User.user_id == user_id).first()
 
-def get_user_by_username(db, username:str):    #Rod 18/09/2023 documentation get_user -> get_user_by_username
-    if username in db:
-        user_dict = db[username]
-        return models.UserInDB(**user_dict)
+def get_user_by_username(db: Session, username:str):    #Rod 18/09/2023 documentation get_user -> get_user_by_username
+    return db.query(models.User).filter(models.User.user_name == username).first()
 
 #def get_user_by_email(db: Session, user_email: str):    #Rod 20/08/2023 commented
 #   return db.query(models.User).filter(models.User.email == user_email).first()    #Rod 20/08/2023 commented
 def get_user_by_email(db: Session, user_email: str):    #Rod 20/08/2023 add this function
-   if user_email in db:
-       user_dict = db[user_email]
-       return models.UserInDB(**user_dict)
+   return db.query(models.User).filter(models.User.email == user_email).first()
 
 def get_users(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.User).offset(skip).limit(limit).all()
@@ -63,7 +59,11 @@ def get_exercise_info(db: Session, exercise_id: int):
 #********************************* POST METHODS ********************************
 #-------------------- User creation --------------------
 def create_user(db: Session, user: schemas.User_Create):
-    db_user = models.User(user_name=user.user_name, email=user.email)
+    db_user = models.User(
+        user_name=user.user_name, 
+        hashed_password=get_password_hash(user.password), 
+        email=user.email
+        )
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
@@ -73,7 +73,7 @@ def create_user(db: Session, user: schemas.User_Create):
 
 #---------------- Exercise_plan creation ----------------
 def create_exercise_plan(db: Session, exercise_plan: schemas.Exercise_plan_Create, user_id: int):
-    db_exercise_plan = models.Exercise_plan(exercise_plan_name=exercise_plan.exercise_plan_name, exercise_plan_owner=user_id)
+    db_exercise_plan = models.Exercise_plan(**exercise_plan.dict(), user_owner_id=user_id)
     db.add(db_exercise_plan)
     db.commit()
     db.refresh(db_exercise_plan)
@@ -84,11 +84,8 @@ def create_exercise_plan(db: Session, exercise_plan: schemas.Exercise_plan_Creat
 #-------------------- Rutine creation -------------------
 def create_rutine(db: Session, rutine: schemas.Rutine_Create, owner: int):
     db_rutine = models.Rutine(
-        rutine_name = rutine.rutine_name,
-        rutine_type = rutine.rutine_type,
-        rutine_group = rutine.rutine_group,
-        rutine_category = rutine.rutine_category,
-        owner = owner
+        **rutine.dict(),
+        exercise_plan_id=owner
         )
     db.add(db_rutine)
     db.commit()
@@ -100,14 +97,10 @@ def create_rutine(db: Session, rutine: schemas.Rutine_Create, owner: int):
 #------------------- Exercise creation ---------------------------------------------
 def create_exercise(db: Session, exercise: schemas.Exercise_Create, rutine_id: int):
     db_exercise = models.Exsercise(
-        exercise_id = exercise.exercise_id,
-        exercise_name = exercise.exercise_name,
-        exercise_group = exercise.exercise_group,
-        exercise_type = exercise.exercise_type,
-        rep = exercise.rep,
+        **exercise.dict(),
         #TODO image,
-        exercise_owner = rutine_id
-    )
+        rutine_id = rutine_id
+        )
     db.add(db_exercise)
     db.commit()
     db.refresh(db_exercise)
@@ -139,11 +132,14 @@ def verify_password(plain_password, hashed_password):
 def get_password_hash(password):
     return pwd_context.hash(password)
 
-def authenticate_user(fake_db, username: str, password: str):
-    user = get_user_by_username(fake_db, username)
-
+def authenticate_user(db, username: str, password: str):
+    user = get_user_by_username(db, username)
+    if not user:
+        user = get_user_by_email(db, username)
+    
     if not user:
         return False
+    
     if not verify_password(password, user.hashed_password):
         return False
     return user

@@ -24,7 +24,7 @@ def upgrade() -> None:
         sa.Column('rutine_type', sa.String(50), nullable=False, unique=False, index=True, default="New rutine type"),
         sa.Column('rutine_group', sa.String(50), nullable=False, unique=False, index=True, default="New rutine group"),
         sa.Column('rutine_category', sa.String(50), nullable=False, unique=False, index=True, default="New rutine category"),
-        sa.Column('exercise_plan_id', sa.Integer, nullable=False),
+        sa.Column('exercise_plan_id', sa.Integer, sa.ForeignKey('exercise_plans.exercise_plan_id'), nullable=False),
     )
 
 

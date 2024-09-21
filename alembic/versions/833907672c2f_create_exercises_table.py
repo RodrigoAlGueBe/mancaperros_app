@@ -24,7 +24,7 @@ def upgrade() -> None:
         sa.Column('rep', sa.String(50), nullable=False, unique=False, index=True, default="empty"),
         sa.Column('exercise_type', sa.String(50), nullable=False, unique=False, index=True, default="New exercise type"),
         sa.Column('exercise_group', sa.String(50), nullable=False, unique=False, index=True, default="New exercise group"),
-        sa.Column('rutine_id', sa.Integer, nullable=False),
+        sa.Column('rutine_id', sa.Integer, sa.ForeignKey('rutines.rutine_id'), nullable=False),
     )
 
 

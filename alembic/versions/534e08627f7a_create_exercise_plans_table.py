@@ -21,7 +21,7 @@ def upgrade() -> None:
         'exercise_plans',
         sa.Column('exercise_plan_id', sa.Integer, primary_key=True, index=True),
         sa.Column('exercise_plan_name', sa.String(50), nullable=False, unique=False, index=True, default="New exercise plan"),
-        sa.Column('user_owner_id', sa.Integer, nullable=False),
+        sa.Column('user_owner_id', sa.Integer, sa.ForeignKey('users.user_id'), nullable=False),
     )
 
 

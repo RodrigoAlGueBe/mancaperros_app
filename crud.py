@@ -107,6 +107,22 @@ def create_exercise(db: Session, exercise: schemas.Exercise_Create, rutine_id: i
     
     return db_exercise
 #-----------------------------------------------------------------------------------
+
+#---------------- Exercise_plan_global creation ----------------
+def create_exercise_plan_global(db: Session, exercise_plan: schemas.Exercise_plan_global_Create, user_id: int):
+    db_exercise_plan = models.Exercise_plan_global(
+        **exercise_plan.dict(), 
+        user_creator_id=user_id, 
+        creation_date=datetime.now().date()
+    )
+    db.add(db_exercise_plan)
+    db.commit()
+    db.refresh(db_exercise_plan)
+    
+    return db_exercise_plan
+#--------------------------------------------------------
+
+
 #*******************************************************************************
 
 # AUXILIAR

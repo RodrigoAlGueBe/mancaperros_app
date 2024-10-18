@@ -46,6 +46,10 @@ class Exercise_plan_Base(BaseModel):
 class Exercise_plan_Create(Exercise_plan_Base):
     exercise_plan_type: str | None = None
     difficult_level: str | None = None
+    user_owner_id: int
+    creation_date: date | None = None
+
+    rutines: list[Rutine] = []
 
 class Exercise_plan(Exercise_plan_Base):
     user_owner_id: int
@@ -61,6 +65,9 @@ class Exercise_plan(Exercise_plan_Base):
 #----------- Exercise_plan_global -------------
 class Exercise_plan_global_Base(BaseModel):
     exercise_plan_name: str
+
+class Exercise_plan_global_info(Exercise_plan_global_Base):
+    exercise_plan_id: int
 
 class Exercise_plan_global_Response(Exercise_plan_global_Base):
     exercise_plan_type: str | None = None
@@ -91,12 +98,16 @@ class Rutine_global_Base(BaseModel):
     rutine_name: str
 
 class Rutine_global_Create(Rutine_global_Base):
+    exercise_plan_id: int
     rutine_type: str | None = None
     rutine_group: str | None = None
     rutine_category: str | None = None
+    rounds: int
+    rst_btw_exercises: str
+    rst_btw_rounds: str
+    difficult_level: str | None = None
 
-class Rutine_global(Rutine_global_Base):   
-    exercise_plan_id: int
+class Rutine_global(Rutine_global_Base): 
     rounds: int
     rst_btw_exercises: str
     rst_btw_rounds: str
@@ -116,10 +127,12 @@ class Exercise_global_Base(BaseModel):
     exercise_group: str
 
 class Exercise_global_Create(Exercise_global_Base):
-    pass
+    rutine_id: int
+    image: str | None = None
+
 
 class Exercise_global(Exercise_global_Base):
-    rutine_id: int
+    pass
     
     class Config:
         orm_mode = True

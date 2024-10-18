@@ -71,29 +71,6 @@ def create_user(db: Session, user: schemas.User_Create):
     return db_user
 #--------------------------------------------------------
 
-#---------------- Exercise_plan creation ----------------
-def create_exercise_plan(db: Session, exercise_plan: schemas.Exercise_plan_Create, user_id: int):
-    db_exercise_plan = models.Exercise_plan(**exercise_plan.dict(), user_owner_id=user_id)
-    db.add(db_exercise_plan)
-    db.commit()
-    db.refresh(db_exercise_plan)
-    
-    return db_exercise_plan
-#--------------------------------------------------------
-
-#-------------------- Rutine creation -------------------
-def create_rutine(db: Session, rutine: schemas.Rutine_Create, owner: int):
-    db_rutine = models.Rutine(
-        **rutine.dict(),
-        exercise_plan_id=owner
-        )
-    db.add(db_rutine)
-    db.commit()
-    db.refresh(db_rutine)
-    
-    return db_rutine
-#--------------------------------------------------------
-
 #------------------- Exercise creation ---------------------------------------------
 def create_exercise(db: Session, exercise: schemas.Exercise_Create, rutine_id: int):
     db_exercise = models.Exsercise(
@@ -122,8 +99,56 @@ def create_exercise_plan_global(db: Session, exercise_plan: schemas.Exercise_pla
     return db_exercise_plan
 #--------------------------------------------------------
 
+#------------------------- Rutine_global creation ------------------------
+def create_routine_global(db: Session, exercise_gobal: schemas.Rutine_global_Create, owner: int):
+    db_rutine_global = models.Rutine_global(
+        **exercise_gobal.dict()
+        )
+    db.add(db_rutine_global)
+    db.commit()
+    db.refresh(db_rutine_global)
+    
+    return db_rutine_global
+#-------------------------------------------------------------------------
 
+#----------------------------- Exercise_global creation ----------------------------
+def create_exercise_global(db: Session, exercise_global: schemas.Exercise_Create):
+    db_exercise = models.Exsercise_global(
+        **exercise_global.dict(),
+        )
+    db.add(db_exercise)
+    db.commit()
+    db.refresh(db_exercise)
+    
+    return db_exercise
+#-----------------------------------------------------------------------------------
 #*******************************************************************************
+
+
+#********************************* PUT METHODS *********************************
+#--------------- Exercise_plan asignation ----------------
+def asign_exercise_plan(db: Session, exercise_plan: schemas.Exercise_plan_Create, user_id: int):
+    db_exercise_plan = models.Exercise_plan(
+        **exercise_plan, 
+        user_owner_id=user_id
+        )
+    db.add(db_exercise_plan)
+    db.commit()
+    db.refresh(db_exercise_plan)
+    
+    return db_exercise_plan
+
+
+def delete_exercise_plan_for_user(db: Session, user_id: int):
+    db.query(models.Exercise_plan).filter(
+        models.Exercise_plan.user_owner_id == user_id
+    ).delete()
+    db.commit()
+    
+    return True
+#---------------------------------------------------------
+#*******************************************************************************
+
 
 # AUXILIAR
 def fake_decode_token(token):

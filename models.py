@@ -1,11 +1,13 @@
 from sqlalchemy import Column, ForeignKey, Integer, String, Date
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, declarative_base
 
 from database import Base
 from pydantic import BaseModel
 
 from datetime import date
 
+
+Base = declarative_base()
 
 class User(Base):
     __tablename__ = "users"
@@ -17,7 +19,7 @@ class User(Base):
     user_image = Column(String, unique=False, index=True, default="empty")
     
 
-    exercise_plan = relationship("Exercise_plan", back_populates="exercise_plan_owner")
+    exercise_plan = relationship("Exercise_plan", back_populates="exercise_plan_owner", cascade="all, delete-orphan")
     exercise_plan_global = relationship("Exercise_plan_global", back_populates="exercise_plan_owner")
     
 class Exercise_plan(Base):
@@ -30,7 +32,7 @@ class Exercise_plan(Base):
     creation_date = Column(Date, unique=False, index=True, default=date(1970, 1, 1))
     difficult_level = Column(String, unique=False, index=True, default="New exercise plan difficult level")
     
-    rutines = relationship("Rutine", back_populates="owner")
+    rutines = relationship("Rutine", back_populates="owner", cascade="all, delete-orphan")
     exercise_plan_owner = relationship("User", back_populates="exercise_plan")
     
 class Rutine(Base):
@@ -48,7 +50,7 @@ class Rutine(Base):
     difficult_level = Column(String, unique=False, index=True, default="New rutine difficult level")
     
     owner = relationship("Exercise_plan", back_populates="rutines")
-    exercises = relationship("Exsercise", back_populates="exercise_owner")
+    exercises = relationship("Exsercise", back_populates="exercise_owner", cascade="all, delete-orphan")
     
 class Exsercise(Base):
     __tablename__ = "exercises"
@@ -73,7 +75,7 @@ class Exercise_plan_global(Base):
     creation_date = Column(Date, nullable=False, unique=False, index=True, default=date(1970, 1, 1))
     difficult_level = Column(String, nullable=False, unique=False, index=True, default="New exercise plan difficult level")
     
-    rutines = relationship("Rutine_global", back_populates="owner")
+    rutines = relationship("Rutine_global", back_populates="owner", cascade="all, delete-orphan")
     exercise_plan_owner = relationship("User", back_populates="exercise_plan_global")
 
 class Rutine_global(Base):
@@ -91,7 +93,7 @@ class Rutine_global(Base):
     difficult_level = Column(String, nullable=False, unique=False, index=True, default="New rutine difficult level")
     
     owner = relationship("Exercise_plan_global", back_populates="rutines")
-    exercises = relationship("Exsercise_global", back_populates="exercise_owner")
+    exercises = relationship("Exsercise_global", back_populates="exercise_owner", cascade="all, delete-orphan")
 
 class Exsercise_global(Base):
     __tablename__ = "exercises_global"

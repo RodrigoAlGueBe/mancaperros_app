@@ -149,7 +149,7 @@ def create_routine_for_exercise_plan(current_user: Annotated[models.User, Depend
 # ****************************************************** PUT *******************************************************
 @app.put("/users/exercise_plans", response_model=schemas.Exercise_plan)
 def asign_exercise_plan_to_user(current_user: Annotated[models.User, Depends(get_current_user)], exercise_plan: schemas.Exercise_plan_global_info, db: Session = Depends(get_db)):
-        
+
     user_from_email = crud.get_user_by_email(db, user_email=current_user.username)
     if not user_from_email:
         raise HTTPException(status_code=400, detail="User not found")
@@ -157,15 +157,16 @@ def asign_exercise_plan_to_user(current_user: Annotated[models.User, Depends(get
     if db.query(models.Exercise_plan).filter(models.Exercise_plan.user_owner_id == user_from_email.user_id).first():
         crud.delete_exercise_plan_for_user(db, user_from_email.user_id)
     
+    # Get and clean exercise plan
     exercise_plan_global = db.query(models.Exercise_plan_global)\
                              .options(joinedload(models.Exercise_plan_global.rutines))\
                              .filter(models.Exercise_plan_global.exercise_plan_id == exercise_plan.exercise_plan_id).first()
-    exercise_plan_global = exercise_plan_global.__dict__
-    # Habria que renombrar o cupiar los objetos Rutine_global a Rutine para que el modelo de rutina sea el correcto
-    print(exercise_plan_global)
-    del exercise_plan_global["exercise_plan_id"]
-    del exercise_plan_global["_sa_instance_state"]
-    del exercise_plan_global["user_creator_id"]
+    # exercise_plan_global = exercise_plan_global.__dict__
+    
+    # print(exercise_plan_global)
+    # del exercise_plan_global["exercise_plan_id"]
+    # del exercise_plan_global["_sa_instance_state"]
+    # del exercise_plan_global["user_creator_id"]
     
     if not exercise_plan_global:
         raise HTTPException(

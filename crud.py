@@ -127,14 +127,60 @@ def create_exercise_global(db: Session, exercise_global: schemas.Exercise_Create
 
 #********************************* PUT METHODS *********************************
 #--------------- Exercise_plan asignation ----------------
+# def asign_exercise_plan(db: Session, exercise_plan: schemas.Exercise_plan_Create, user_id: int):
+#     db_exercise_plan = models.Exercise_plan(
+#         **exercise_plan, 
+#         user_owner_id=user_id
+#         )
+#     db.add(db_exercise_plan)
+#     db.commit()
+#     db.refresh(db_exercise_plan)
+    
+#     return db_exercise_plan
+
+
 def asign_exercise_plan(db: Session, exercise_plan: schemas.Exercise_plan_Create, user_id: int):
+    
+    # Crear nuevo Exercise_plan
     db_exercise_plan = models.Exercise_plan(
-        **exercise_plan, 
-        user_owner_id=user_id
+        exercise_plan_name=exercise_plan.exercise_plan_name,
+        user_owner_id=user_id,
+        exercise_plan_type=exercise_plan.exercise_plan_type,
+        creation_date=datetime.now().date(),
+        difficult_level=exercise_plan.difficult_level
         )
     db.add(db_exercise_plan)
-    db.commit()
-    db.refresh(db_exercise_plan)
+    db.flush()
+    
+    # Copiar las rutinas del Exercise_plan_global al nuevo Exercise_plan
+    for rutine_global in exercise_plan.rutines:
+        db_rutine = models.Rutine(
+            rutine_name=rutine_global.rutine_name,
+            rutine_type=rutine_global.rutine_type,
+            rutine_group=rutine_global.rutine_group,
+            rutine_category=rutine_global.rutine_category,
+            exercise_plan_id=db_exercise_plan.exercise_plan_id,
+            rounds=rutine_global.rounds,
+            rst_btw_exercises=rutine_global.rst_btw_exercises,
+            rst_btw_rounds=rutine_global.rst_btw_rounds,
+            difficult_level=rutine_global.difficult_level
+        )
+        db.add(db_rutine)
+        db.flush()
+        
+        # Copiar los ejercicios de la rutina del Exercise_plan_global al nuevo Exercise_plan
+        for exercise_global in rutine_global.exercises:
+            db_exercise = models.Exercise(
+                exercise_name = exercise_global.exercise_name,
+                rep = exercise_global.rep,
+                exercise_type = exercise_global.exercise_type,
+                exercise_group = exercise_global.exercise_group,
+                rutine_id = db_rutine.rutine_id
+                image = exercise_global.image
+            )
+            db.add(db_exercise)
+            
+        db.commit()
     
     return db_exercise_plan
 

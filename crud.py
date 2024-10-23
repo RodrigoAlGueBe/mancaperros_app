@@ -170,12 +170,12 @@ def asign_exercise_plan(db: Session, exercise_plan: schemas.Exercise_plan_Create
         
         # Copiar los ejercicios de la rutina del Exercise_plan_global al nuevo Exercise_plan
         for exercise_global in rutine_global.exercises:
-            db_exercise = models.Exercise(
+            db_exercise = models.Exsercise(
                 exercise_name = exercise_global.exercise_name,
                 rep = exercise_global.rep,
                 exercise_type = exercise_global.exercise_type,
                 exercise_group = exercise_global.exercise_group,
-                rutine_id = db_rutine.rutine_id
+                rutine_id = db_rutine.rutine_id,
                 image = exercise_global.image
             )
             db.add(db_exercise)
@@ -186,9 +186,33 @@ def asign_exercise_plan(db: Session, exercise_plan: schemas.Exercise_plan_Create
 
 
 def delete_exercise_plan_for_user(db: Session, user_id: int):
+    # Get all exercise plans for the user
+    exercise_plan = db.query(models.Exercise_plan).filter(
+        models.Exercise_plan.user_owner_id == user_id
+    ).first()
+
+    #if db.query(models.Rutine).filter(models.Rutine.exercise_plan_id == exercise_plan.exercise_plan_id).all():
+    # Get all routines associated with the exercise plan
+    routines = db.query(models.Rutine).filter(
+        models.Rutine.exercise_plan_id == exercise_plan.exercise_plan_id
+    ).all()
+    
+    for routine in routines:
+        # Delete all exercises associated with the routine
+        db.query(models.Exsercise).filter(
+            models.Exsercise.rutine_id == routine.rutine_id
+        ).delete()
+    
+    # Delete the routine
+    db.query(models.Rutine).filter(
+        models.Rutine.exercise_plan_id == exercise_plan.exercise_plan_id
+    ).delete()
+    
+    # Delete the exercise plan
     db.query(models.Exercise_plan).filter(
         models.Exercise_plan.user_owner_id == user_id
     ).delete()
+    
     db.commit()
     
     return True

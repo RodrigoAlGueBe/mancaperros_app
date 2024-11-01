@@ -180,7 +180,7 @@ def asign_exercise_plan(db: Session, exercise_plan: schemas.Exercise_plan_Create
             )
             db.add(db_exercise)
             
-        db.commit()
+    db.commit()
     
     return db_exercise_plan
 

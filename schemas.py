@@ -70,6 +70,7 @@ class Exercise_plan_global_info(Exercise_plan_global_Base):
     exercise_plan_id: int
 
 class Exercise_plan_global_Response(Exercise_plan_global_Base):
+    exercise_plan_id: int
     exercise_plan_type: str | None = None
     difficult_level: str | None = None
     creation_date: date | None = None

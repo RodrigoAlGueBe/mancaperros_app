@@ -270,9 +270,62 @@ async def get_all_exercise_plans_for_user(user_id: int, current_user: Annotated[
 async def get_all_rutines_for_exercise_plan(exercise_plan_id: int, db: Session = Depends(get_db)):
     return db.query(models.Rutine).filter(models.Rutine.exercise_plan_id == exercise_plan_id).all()
 
-@app.get("/rutines/{rutine_id}/exercises")
-async def get_all_exercises_for_rutine(rutine_id: int, db: Session = Depends(get_db)):
-    return db.query(models.Exsercise).filter(models.Exsercise.rutine_id == rutine_id).all()
+
+@app.get("/rutines/{rutine_id}/exercises")  # TODO adaptar a lo nuevo
+async def get_all_exercises_for_rutine(rutine_id: int, current_user: Annotated[str, Depends(get_current_user)], db: Session = Depends(get_db)):
+    
+    if not db.query(models.Rutine).filter(models.Rutine.rutine_id == rutine_id).first():
+        raise HTTPException(
+            status_code=404,
+            detail="Rutine not found"
+        )
+    
+    routine = db.query(models.Rutine).filter(models.Rutine.rutine_id == rutine_id).first()
+    exercises = db.query(models.Exsercise).filter(models.Exsercise.rutine_id == rutine_id).all()
+
+    output_response = {
+        "routine_group": routine.rutine_group,
+        "rutine_type": routine.rutine_type,
+        "rutine_category": routine.rutine_category,
+        "num_series": routine.rounds,
+        "rest_between_exercises": routine.rst_btw_exercises,
+        "rest_between_series": routine.rst_btw_rounds,
+        "exercises": {}
+    }
+    
+    count = 0
+    for exercise in exercises:
+        count += 1
+
+        if len(output_response["exercises"]) == 0:
+            output_response["exercises"]["exercise_start"] = {
+                "exercise_name": exercise.exercise_name,
+                "image": exercise.image,
+                "reps": exercise.rep,
+                "exercise_type": exercise.exercise_type,
+                "exercise_group": exercise.exercise_group
+            }
+
+        elif len(output_response["exercises"]) == len(exercises) - 1:
+            output_response["exercises"]["exercise_end"] = {
+                "exercise_name": exercise.exercise_name,
+                "image": exercise.image,
+                "reps": exercise.rep,
+                "exercise_type": exercise.exercise_type,
+                "exercise_group": exercise.exercise_group
+            }
+
+        else:
+            output_response["exercises"][f"exercise_{count}"] = {
+                "exercise_name": exercise.exercise_name,
+                "reps": exercise.rep,
+                "exercise_type": exercise.exercise_type,
+                "exercise_group": exercise.exercise_group,
+                "image": exercise.image
+            }
+    
+    return output_response
+
 
 @app.get("/test/")
 def get_test():

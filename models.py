@@ -1,4 +1,4 @@
-from sqlalchemy import Column, ForeignKey, Integer, String, Date
+from sqlalchemy import Column, ForeignKey, Integer, String, Date, JSON
 from sqlalchemy.orm import relationship, declarative_base
 
 from database import Base
@@ -107,7 +107,21 @@ class Exsercise_global(Base):
     image = Column(String, nullable=False, unique=False, index=True, default="empty")
 
     exercise_owner = relationship("Rutine_global", back_populates="exercises")
-
+    
+class User_Tracker(Base):
+    __tablemane__ = "users_tracker"
+    
+    record_datetime = Column(Date, nulable=False, unique=False, index=True, default=date.today())
+    info_type = Column(String, nulable=False, unique=False, index=True, default="Non_specifed")
+    info_description = Column(String, nulable=True, unique=False, index=True, default="Non_specifed")
+    exercise_increments = Column(JSON, nulable=True, unique=False, default=None)
+    push_increment = Column(Integer, nulable=False, unique=False, default=0)
+    pull_increment = Column(Integer, nulable=False, unique=False, default=0)
+    isometric_increment = Column(Integer, nulable=False, unique=False, default=0)
+    push_increment_units = Column(String, nulable=False, unique=False, default="uds")
+    
+    user_tracked = relationship("User", back_populates="user_tracker")
+    
 
 # ************************** For logging purposes **************************
 class Token(BaseModel):

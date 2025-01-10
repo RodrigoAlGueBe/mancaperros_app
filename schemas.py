@@ -161,6 +161,19 @@ class User(User_Base):
         orm_mode = True
 #----------------------------------------------
 
+#--------------- User_tracker -----------------
+class User_tracker_Base(BaseModel):
+    user_id: int
+    user_tracker_id: int
+
+class User_tracker_exercise_plan(User_tracker_Base):
+    info_type: str
+    record_datetime: date
+
+    class config:
+        orm_mode = True
+#----------------------------------------------
+
 #------------------- token --------------------
 class Token(BaseModel):
     access_token: str

@@ -21,6 +21,7 @@ class User(Base):
 
     exercise_plan = relationship("Exercise_plan", back_populates="exercise_plan_owner", cascade="all, delete-orphan")
     exercise_plan_global = relationship("Exercise_plan_global", back_populates="exercise_plan_owner")
+    user_tracker = relationship("User_Tracker", back_populates="user_tracked")
     
 class Exercise_plan(Base):
     __tablename__ = "exercise_plans"
@@ -112,6 +113,7 @@ class User_Tracker(Base):
     __tablename__ = "users_tracker"
     
     user_tracker_id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.user_id"), nullable=False)
     record_datetime = Column(Date, nullable=False, unique=False, index=True, default=date.today())
     info_type = Column(String, nullable=False, unique=False, index=True, default="Non_specifed")
     info_description = Column(String, nullable=True, unique=False, index=True, default="Non_specifed")
@@ -119,7 +121,9 @@ class User_Tracker(Base):
     push_increment = Column(Integer, nullable=False, unique=False, default=0)
     pull_increment = Column(Integer, nullable=False, unique=False, default=0)
     isometric_increment = Column(Integer, nullable=False, unique=False, default=0)
-    push_increment_units = Column(String, nullable=False, unique=False, default="uds")
+    push_time_increment = Column(Integer, nullable=False, unique=False, default=0)
+    pull_time_increment = Column(Integer, nullable=False, unique=False, default=0)
+    isometric_time_increment = Column(Integer, nullable=False, unique=False, default=0)
     
     user_tracked = relationship("User", back_populates="user_tracker")
     

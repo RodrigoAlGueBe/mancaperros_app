@@ -1,1 +1,4 @@
 README.txt
+__pycache__/
+alembic/__pycache__/
+mancaperros_env\Lib\site-packages\sqlalchemy\ext\__pycache__\

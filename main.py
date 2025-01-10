@@ -10,6 +10,8 @@ from jose import JWTError, jwt
 import crud, models, schemas
 from database import SessionLocal, engine
 
+from utils.functions import f_unit_type_finder, f_reps_to_seconds
+
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
@@ -143,38 +145,117 @@ def create_routine_for_exercise_plan(current_user: Annotated[models.User, Depend
         raise HTTPException(status_code=400, detail="Exercise name already exists for this Routine")
     
     return crud.create_exercise_global(db=db, exercise_global=exercise)
+
+
+@app.post("/users/end_routine")
+async def end_routine(current_user: Annotated[models.User, Depends(get_current_user)], exercises_summary:dict, db: Session = Depends(get_db)):
+    
+    # Obtenemos el usuario
+    user_from_email = crud.get_user_by_email(db, user_email=current_user.username)
+    if not user_from_email:
+        raise HTTPException(status_code=400, detail="User not found")
+
+    # Obtenemos el ultimo registro de plan de ejericios empezado
+    last_exercise_plan = db.query(models.Exercise_plan).filter(
+        models.Exercise_plan.user_owner_id == user_from_email.user_id
+    ).first()
+
+    # Obtenemos la rutina actual
+    last_routine = db.query(models.Rutine).filter(
+        models.Rutine.exercise_plan_id == last_exercise_plan.exercise_plan_id,
+        models.Rutine.rutine_group == exercises_summary["routine_group"]
+    ).first()
+
+    # Actualizamos los ejercicios de la rutina
+    exercises_receibed = exercises_summary["exercises"]
+    exercise_quantity = len(exercises_receibed)
+
+    ## Comprobamos que el número de ejercicios por rutina coincida
+    if exercise_quantity != len(last_routine.exercises):
+        raise HTTPException(status_code=500, detail="Received routine does not match with started routine")
+
+    exercise_order_name = "exercise_"
+    exercise_secuence = "start"
+    exercise_record = {
+        "info_type": "rutine_end",
+        "info_description": exercises_summary["routine_group"],
+        "exercise_increments": {},
+        "push_increment": 0,
+        "pull_increment": 0,
+        "isometric_increment": 0,
+    }
+    for exercise_db in last_routine.exercises:
+        new_reps = exercises_receibed[exercise_order_name + str(exercise_secuence)]["reps"]
+        exercise_record["exercise_increments"][exercise_db.exercise_name] = int(exercise_db.rep) - int(new_reps)
+        exercise_db.rep = new_reps
+
+        exercise_type_1, exercise_type_2 = exercise_db.exercise_type.split('-')
+
+        # Actualizamos los incrementos
+        if exercise_type_1 == "push":
+            exercise_record["push_increment"] += int(exercise_db.rep) - int(new_reps)
+        elif exercise_type_1 == "pull":
+            exercise_record["pull_increment"] += int(exercise_db.rep) - int(new_reps)
+        else:
+            exercise_record["isometric_increment"] += int(f_reps_to_seconds(exercise_db.rep)) - int(f_reps_to_seconds(new_reps))
+
+        # Actualizamos el número del ejercicio
+        if exercise_secuence == "start":
+            exercise_secuence = 2
+        elif exercise_secuence == "end":
+            break
+        elif int(exercise_secuence) < exercise_quantity - 1:
+            exercise_secuence += 1
+        else:
+            exercise_secuence = "end"
+    
+    # Actualizamos la rutina
+    crud.update_routine(db, last_routine)
+
+    # Creamos el registro de rutina terminada
+    crud.redord_end_rutine(db, user_from_email.user_id, exercise_record)
+
+    return {"detail": "Routine ended correctly"}    
 # ******************************************************************************************************************
 
 
 # ****************************************************** PUT *******************************************************
-@app.put("/users/exercise_plans", response_model=schemas.Exercise_plan)
+@app.put("/users/exercise_plans", response_model=schemas.User_tracker_exercise_plan)
 def asign_exercise_plan_to_user(current_user: Annotated[models.User, Depends(get_current_user)], exercise_plan: schemas.Exercise_plan_global_info, db: Session = Depends(get_db)):
 
     user_from_email = crud.get_user_by_email(db, user_email=current_user.username)
     if not user_from_email:
         raise HTTPException(status_code=400, detail="User not found")
     
-    if db.query(models.Exercise_plan).filter(models.Exercise_plan.user_owner_id == user_from_email.user_id).first():
-        crud.delete_exercise_plan_for_user(db, user_from_email.user_id)
-    
     # Get and clean exercise plan
     exercise_plan_global = db.query(models.Exercise_plan_global)\
                              .options(joinedload(models.Exercise_plan_global.rutines))\
                              .filter(models.Exercise_plan_global.exercise_plan_id == exercise_plan.exercise_plan_id).first()
-    # exercise_plan_global = exercise_plan_global.__dict__
     
-    # print(exercise_plan_global)
-    # del exercise_plan_global["exercise_plan_id"]
-    # del exercise_plan_global["_sa_instance_state"]
-    # del exercise_plan_global["user_creator_id"]
-    
+    if db.query(models.Exercise_plan).filter(models.Exercise_plan.user_owner_id == user_from_email.user_id).first():
+        crud.delete_exercise_plan_for_user(db, user_from_email.user_id)
+        crud.record_end_exercise_plan(db, user_from_email.user_id, exercise_plan_global)
+   
     if not exercise_plan_global:
         raise HTTPException(
             status_code=400,
             detail="Exercise plan not found"
         )
     
-    return crud.asign_exercise_plan(db=db, exercise_plan=exercise_plan_global, user_id=user_from_email.user_id)
+    # Asigar plan de ejercicios al usuario
+    crud.asign_exercise_plan(db=db, exercise_plan=exercise_plan_global, user_id=user_from_email.user_id)
+
+    # Crear record de inicio de plan de ejercicios
+    response = crud.record_start_exercise_plan(db, user_from_email.user_id, exercise_plan_global)
+    
+    return {
+        "user_id": response.user_id,
+        "user_tracker_id": response.user_tracker_id,
+        "info_type": response.info_type,
+        "record_datetime": response.record_datetime
+    }
+    
+    # return crud.asign_exercise_plan(db=db, exercise_plan=exercise_plan_global, user_id=user_from_email.user_id) DEPRECATED
 # ******************************************************************************************************************
 
 

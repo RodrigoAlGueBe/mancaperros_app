@@ -122,23 +122,36 @@ def create_exercise_global(db: Session, exercise_global: schemas.Exercise_Create
     
     return db_exercise
 #-----------------------------------------------------------------------------------
+
+
+def record_end_exercise_plan(db: Session, user_id: int, exercise_record):
+    db_exercise_plan_record = models.User_Tracker(
+        user_id = user_id,
+        info_type = "exercise_plan_end",
+        info_description = exercise_record.exercise_plan_id
+    )
+    db.add(db_exercise_plan_record)
+    db.commit()
+    db.refresh(db_exercise_plan_record)
+
+    return db_exercise_plan_record
+
+
+def record_start_exercise_plan(db: Session, user_id: int, exercise_record):
+    db_exercise_plan_record = models.User_Tracker(
+        user_id = user_id,
+        info_type = "exercise_plan_start",
+        info_description = exercise_record.exercise_plan_id
+    )
+    db.add(db_exercise_plan_record)
+    db.commit()
+    db.refresh(db_exercise_plan_record)
+
+    return db_exercise_plan_record
 #*******************************************************************************
 
 
 #********************************* PUT METHODS *********************************
-#--------------- Exercise_plan asignation ----------------
-# def asign_exercise_plan(db: Session, exercise_plan: schemas.Exercise_plan_Create, user_id: int):
-#     db_exercise_plan = models.Exercise_plan(
-#         **exercise_plan, 
-#         user_owner_id=user_id
-#         )
-#     db.add(db_exercise_plan)
-#     db.commit()
-#     db.refresh(db_exercise_plan)
-    
-#     return db_exercise_plan
-
-
 def asign_exercise_plan(db: Session, exercise_plan: schemas.Exercise_plan_Create, user_id: int):
     
     # Crear nuevo Exercise_plan
@@ -185,6 +198,14 @@ def asign_exercise_plan(db: Session, exercise_plan: schemas.Exercise_plan_Create
     return db_exercise_plan
 
 
+def update_routine(db, last_routine):
+    db.add(last_routine)
+    db.commit()
+    db.refresh(last_routine)
+    
+    return last_routine
+
+
 def delete_exercise_plan_for_user(db: Session, user_id: int):
     # Get all exercise plans for the user
     exercise_plan = db.query(models.Exercise_plan).filter(
@@ -216,6 +237,21 @@ def delete_exercise_plan_for_user(db: Session, user_id: int):
     db.commit()
     
     return True
+
+
+def redord_end_rutine(db: Session, user_id: int, exercise_record: dict):
+
+    db_rutine_record = models.User_Tracker(
+        **exercise_record,
+        user_id=user_id,
+
+    )
+    db.add(db_rutine_record)
+    db.commit()
+    db.refresh(db_rutine_record)
+
+    return db_rutine_record
+    
 #---------------------------------------------------------
 #*******************************************************************************
 

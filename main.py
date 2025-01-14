@@ -352,6 +352,19 @@ async def get_all_rutines_for_exercise_plan(exercise_plan_id: int, db: Session =
     return db.query(models.Rutine).filter(models.Rutine.exercise_plan_id == exercise_plan_id).all()
 
 
+@app.get("/rutines/get_asigned_routines")
+async def get_asigned_routines(current_user: Annotated[models.User, Depends(get_current_user)], db: Session = Depends(get_db)):
+
+    user_from_email = crud.get_user_by_email(db, user_email=current_user.username)
+    if not user_from_email:
+        raise HTTPException(status_code=400, detail="User not found")
+    
+    # Obtenemos el plan de ejercicios actual
+    asigned_exercise_plan = db.query(models.Exercise_plan).filter(models.Exercise_plan.user_owner_id == user_from_email.user_id).first()
+    
+    return db.query(models.Rutine).filter(models.Rutine.exercise_plan_id == asigned_exercise_plan.exercise_plan_id).all()
+
+
 @app.get("/rutines/{rutine_id}/exercises")  # TODO adaptar a lo nuevo
 async def get_all_exercises_for_rutine(rutine_id: int, current_user: Annotated[str, Depends(get_current_user)], db: Session = Depends(get_db)):
     
@@ -415,15 +428,14 @@ def get_test():
 @app.get("/users/get_exercise_plans_muscular_groups/{exercise_plan_name}")
 def get_muscular_groups_for_exercise_plans(exercise_plan_name, current_user: Annotated[models.User, Depends(get_current_user)], db: Session = Depends(get_db)):
 
-    exercise_plan_by_name = db.query(models.Exercise_plan_global).filter(models.Exercise_plan_global.exercise_plan_name == exercise_plan_name).first()
-    if not exercise_plan_by_name:
-        raise HTTPException(
-            status_code=404,
-            detail="Exercise plan not found"
-        )
+    user_by_email = crud.get_user_by_email(db, user_email=current_user.username)
+    if not user_by_email:
+        raise HTTPException(status_code=400, detail="User not found")
+    
+    exercise_plan = db.query(models.Exercise_plan).filter(models.Exercise_plan.user_owner_id == user_by_email.user_id).first()
 
-    routines = db.query(models.Rutine_global).filter(models.Rutine_global.exercise_plan_id == exercise_plan_by_name.exercise_plan_id).all()
-    routine_groups = list(set(routine.rutine_group for routine in routines))
+    routines = db.query(models.Rutine).filter(models.Rutine.exercise_plan_id == exercise_plan.exercise_plan_id).all()
+    routine_groups = list({"rutine_group": routine.rutine_group, "rutine_id": routine.rutine_id} for routine in routines) #TODO devolver lista de grupos con id de rutinas, diccionario de listas
 
     return routine_groups
 # ******************************************************************************************************************

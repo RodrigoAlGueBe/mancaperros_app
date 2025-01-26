@@ -1,10 +1,12 @@
-from sqlalchemy import Column, ForeignKey, Integer, String, Date, JSON
+from sqlalchemy import Column, ForeignKey, Integer, String, DateTime, Date, JSON
 from sqlalchemy.orm import relationship, declarative_base
 
 from database import Base
 from pydantic import BaseModel
 
-from datetime import date
+import settings
+
+from datetime import datetime, date, timezone
 
 
 Base = declarative_base()
@@ -32,6 +34,7 @@ class Exercise_plan(Base):
     exercise_plan_type = Column(String, unique=False, index=True, default="New exercise plan type")
     creation_date = Column(Date, unique=False, index=True, default=date(1970, 1, 1))
     difficult_level = Column(String, unique=False, index=True, default="New exercise plan difficult level")
+    routine_group_order = Column(JSON, nullable=False, unique=False, index=True, default=settings.ROUTINE_GROUP_ORDER_DEFAULT)
     
     rutines = relationship("Rutine", back_populates="owner", cascade="all, delete-orphan")
     exercise_plan_owner = relationship("User", back_populates="exercise_plan")
@@ -75,6 +78,7 @@ class Exercise_plan_global(Base):
     exercise_plan_type = Column(String, nullable=False, unique=False, index=True, default="New exercise plan type")
     creation_date = Column(Date, nullable=False, unique=False, index=True, default=date(1970, 1, 1))
     difficult_level = Column(String, nullable=False, unique=False, index=True, default="New exercise plan difficult level")
+    routine_group_order = Column(JSON, nullable=False, unique=False, index=True, default=settings.ROUTINE_GROUP_ORDER_DEFAULT)
     
     rutines = relationship("Rutine_global", back_populates="owner", cascade="all, delete-orphan")
     exercise_plan_owner = relationship("User", back_populates="exercise_plan_global")
@@ -114,7 +118,7 @@ class User_Tracker(Base):
     
     user_tracker_id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.user_id"), nullable=False)
-    record_datetime = Column(Date, nullable=False, unique=False, index=True, default=date.today())
+    record_datetime = Column(DateTime, nullable=False, unique=False, index=True, default=datetime.now(timezone.utc).replace(tzinfo=None))
     info_type = Column(String, nullable=False, unique=False, index=True, default="Non_specifed")
     info_description = Column(String, nullable=True, unique=False, index=True, default="Non_specifed")
     exercise_increments = Column(JSON, nullable=True, unique=False, default=None)

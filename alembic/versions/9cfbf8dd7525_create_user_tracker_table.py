@@ -22,7 +22,7 @@ def upgrade() -> None:
     op.create_table('users_tracker', 
             sa.Column('user_tracker_id', sa.Integer(), nullable=False, primary_key=True, index=True),
             sa.Column('user_id', sa.Integer(), sa.ForeignKey('users.user_id'), nullable=False),
-            sa.Column('record_datetime', sa.Date(), nullable=False, unique=False, index=True, default=date.today()),
+            sa.Column('record_datetime', sa.DateTime(), nullable=False, unique=False, index=True, default=date.today()),
             sa.Column('info_type', sa.String(), nullable=False, unique=False, index=True, default="Non_specifed"),
             sa.Column('info_description', sa.String(), nullable=True, unique=False, index=True, default="Non_specifed"),
             sa.Column('exercise_increments', sa.JSON(), nullable=True, unique=False, default=None),

@@ -1,11 +1,12 @@
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
-from datetime import timedelta
+from datetime import timedelta, datetime, timezone
 
 from typing import Annotated, List
 from sqlalchemy.orm import Session, joinedload
 from jose import JWTError, jwt
+import json
 
 import crud, models, schemas
 from database import SessionLocal, engine
@@ -177,6 +178,7 @@ async def end_routine(current_user: Annotated[models.User, Depends(get_current_u
     exercise_order_name = "exercise_"
     exercise_secuence = "start"
     exercise_record = {
+        "record_datetime": datetime.now(timezone.utc).replace(tzinfo=None),
         "info_type": "rutine_end",
         "info_description": exercises_summary["routine_group"],
         "exercise_increments": {},
@@ -438,6 +440,57 @@ def get_muscular_groups_for_exercise_plans(exercise_plan_name, current_user: Ann
     routine_groups = list({"rutine_group": routine.rutine_group, "rutine_id": routine.rutine_id} for routine in routines) #TODO devolver lista de grupos con id de rutinas, diccionario de listas
 
     return routine_groups
+
+@app.get("/users/get_next_routine")
+def get_next_routine(current_user: Annotated[models.User, Depends(get_current_user)], db: Session = Depends(get_db)):
+    
+    user_by_email = crud.get_user_by_email(db, user_email=current_user.username)
+    if not user_by_email:
+        raise HTTPException(status_code=400, detail="User not found")
+    
+    active_exercise_plan = db.query(models.Exercise_plan).filter(models.Exercise_plan.user_owner_id == user_by_email.user_id).first()
+    if not active_exercise_plan:
+        raise HTTPException(status_code=404, detail="No active exercise plan found")
+    
+    routine_order = json.loads(active_exercise_plan.routine_group_order)
+
+    last_routine = db.query(models.User_Tracker).filter(
+                                    models.User_Tracker.user_id == user_by_email.user_id,
+                                    models.User_Tracker.info_type == "rutine_end"
+                                ).order_by(models.User_Tracker.record_datetime.desc()).first()
+    
+    if db.query(models.User_Tracker).filter(
+        models.User_Tracker.user_id == user_by_email.user_id,
+        models.User_Tracker.info_type == "exercise_plan_start"
+        ).order_by(models.User_Tracker.record_datetime.desc()).first().record_datetime > last_routine.record_datetime:
+
+        next_routine = routine_order.pop(0)
+
+    else:
+        last_routine = last_routine.info_description
+        n = 0
+        for muscular_group in routine_order:
+            if (muscular_group == last_routine) and (n + 1 < len(routine_order)):
+                next_routine = routine_order[n + 1]
+                break
+            elif (muscular_group == last_routine) and (n + 1 >= len(routine_order)):
+                next_routine = routine_order[0]
+                break
+            else:
+                n += 1
+    
+    # Obtención del id de la rutina
+    next_routine_id = db.query(models.Rutine).filter(
+        models.Rutine.exercise_plan_id == active_exercise_plan.exercise_plan_id,
+        models.Rutine.rutine_group == next_routine
+    ).first().rutine_id
+
+    next_routine_dict = {
+        'routine': next_routine,
+        'routine_id': next_routine_id
+    }
+
+    return next_routine_dict
 # ******************************************************************************************************************
 
 # ***************************************************** LOGIN ******************************************************

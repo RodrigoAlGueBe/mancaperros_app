@@ -429,6 +429,7 @@ def get_test():
 
 @app.get("/users/get_exercise_plans_muscular_groups/{exercise_plan_name}")
 def get_muscular_groups_for_exercise_plans(exercise_plan_name, current_user: Annotated[models.User, Depends(get_current_user)], db: Session = Depends(get_db)):
+    # TODO, refactorizar esta función para eliminar exercise_plan_name, y también en el front
 
     user_by_email = crud.get_user_by_email(db, user_email=current_user.username)
     if not user_by_email:

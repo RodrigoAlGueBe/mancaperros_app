@@ -160,7 +160,8 @@ def asign_exercise_plan(db: Session, exercise_plan: schemas.Exercise_plan_Create
         user_owner_id=user_id,
         exercise_plan_type=exercise_plan.exercise_plan_type,
         creation_date=datetime.now().date(),
-        difficult_level=exercise_plan.difficult_level
+        difficult_level=exercise_plan.difficult_level,
+        routine_group_order=exercise_plan.routine_group_order
         )
     db.add(db_exercise_plan)
     db.flush()

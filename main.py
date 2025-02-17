@@ -35,7 +35,7 @@ app.add_middleware(
 # Hashed algorithm and secret key configuration
 SECRET_KEY = "f4c961b34a2764b39914debb0b91c22664a44cf16094515f58ef88256291e5fe"
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ACCESS_TOKEN_EXPIRE_MINUTES = 180
 
 # Dependency
 def get_db():
@@ -191,12 +191,12 @@ async def end_routine(current_user: Annotated[models.User, Depends(get_current_u
         exercise_record["exercise_increments"][exercise_db.exercise_name] = int(exercise_db.rep) - int(new_reps)
         exercise_db.rep = new_reps
 
-        exercise_type_1, exercise_type_2 = exercise_db.exercise_type.split('-')
+        exercise_type = exercise_db.exercise_type.split('-')
 
         # Actualizamos los incrementos
-        if exercise_type_1 == "push":
+        if exercise_type[0] == "push":
             exercise_record["push_increment"] += int(exercise_db.rep) - int(new_reps)
-        elif exercise_type_1 == "pull":
+        elif exercise_type[0] == "pull":
             exercise_record["pull_increment"] += int(exercise_db.rep) - int(new_reps)
         else:
             exercise_record["isometric_increment"] += int(f_reps_to_seconds(exercise_db.rep)) - int(f_reps_to_seconds(new_reps))
@@ -449,11 +449,16 @@ def get_next_routine(current_user: Annotated[models.User, Depends(get_current_us
     if not user_by_email:
         raise HTTPException(status_code=400, detail="User not found")
     
-    active_exercise_plan = db.query(models.Exercise_plan).filter(models.Exercise_plan.user_owner_id == user_by_email.user_id).first()
+    active_exercise_plan = db.query(models.Exercise_plan)\
+                             .filter(models.Exercise_plan.user_owner_id == user_by_email.user_id).first()
     if not active_exercise_plan:
         raise HTTPException(status_code=404, detail="No active exercise plan found")
+    print("********************" + str(type(active_exercise_plan.routine_group_order)))
     
-    routine_order = json.loads(active_exercise_plan.routine_group_order)
+    try:
+        routine_order = json.loads(active_exercise_plan.routine_group_order)
+    except (ValueError, TypeError):
+        routine_order = active_exercise_plan.routine_group_order
 
     last_routine = db.query(models.User_Tracker).filter(
                                     models.User_Tracker.user_id == user_by_email.user_id,
@@ -466,6 +471,7 @@ def get_next_routine(current_user: Annotated[models.User, Depends(get_current_us
         ).order_by(models.User_Tracker.record_datetime.desc()).first().record_datetime > last_routine.record_datetime:
 
         next_routine = routine_order.pop(0)
+    
 
     else:
         last_routine = last_routine.info_description
@@ -479,7 +485,7 @@ def get_next_routine(current_user: Annotated[models.User, Depends(get_current_us
                 break
             else:
                 n += 1
-    
+
     # Obtención del id de la rutina
     next_routine_id = db.query(models.Rutine).filter(
         models.Rutine.exercise_plan_id == active_exercise_plan.exercise_plan_id,

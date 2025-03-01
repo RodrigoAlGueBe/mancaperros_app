@@ -21,6 +21,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 origins = [
     "http://localhost",
     "http://localhost:8080",
+    "http://localhost:3100",
     "http://localhost:5173"
 ]
 

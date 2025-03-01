@@ -1,6 +1,6 @@
-FROM python:3.10.5
+FROM python:3.12.4
 
-WORKDIR /code
+WORKDIR /
 
 COPY requirements.txt .
 
@@ -10,4 +10,4 @@ COPY . .
 
 EXPOSE 3100
 
-CMD ["gunicorn", "main:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:3100", "main:app", "--worker-class", "uvicorn.workers.UvicornWorker"]

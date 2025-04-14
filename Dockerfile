@@ -10,4 +10,6 @@ COPY . .
 
 EXPOSE 3100
 
-CMD ["gunicorn", "--bind", "0.0.0.0:3100", "main:app", "--worker-class", "uvicorn.workers.UvicornWorker"]
+#CMD ["gunicorn", "--bind", "0.0.0.0:3100", "main:app", "--worker-class", "uvicorn.workers.UvicornWorker", "--log-level", "info"]
+CMD python init_db.py && gunicorn --bind 0.0.0.0:3100 main:app --worker-class uvicorn.workers.UvicornWorker --log-level info
+

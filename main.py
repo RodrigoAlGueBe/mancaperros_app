@@ -7,6 +7,7 @@ from typing import Annotated, List
 from sqlalchemy.orm import Session, joinedload
 from jose import JWTError, jwt
 import json
+import logging
 
 import crud, models, schemas
 from database import SessionLocal, engine
@@ -14,6 +15,9 @@ from database import SessionLocal, engine
 from utils.functions import f_unit_type_finder, f_reps_to_seconds
 
 models.Base.metadata.create_all(bind=engine)
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = FastAPI()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")

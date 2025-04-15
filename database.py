@@ -4,31 +4,34 @@ from sqlalchemy.orm import sessionmaker
 
 import urllib.parse
 
-# --------------------------- REMOTE CONNECTION ----------------------------
-DB_USER = urllib.parse.quote_plus('erynfitadmin') # @erynfit')
-DB_PASSWORD = urllib.parse.quote_plus('sgJW3a$@HfRmCx6')
-DB_HOST = 'erynfit.mysql.database.azure.com'
-DB_NAME = 'erynfit'
-DB_PORT = '3306'
+mode_prod = True
 
-URL_DATABASE = f'mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}?ssl_ca=/etc/ssl/certs/ca-certificates.crt'
+if mode_prod:
+    # --------------------------- REMOTE CONNECTION ----------------------------
+    DB_USER = urllib.parse.quote_plus('erynfitadmin') # @erynfit')
+    DB_PASSWORD = urllib.parse.quote_plus('sgJW3a$@HfRmCx6')
+    DB_HOST = 'erynfit.mysql.database.azure.com'
+    DB_NAME = 'erynfit'
+    DB_PORT = '3306'
 
-engine = create_engine(URL_DATABASE)
+    URL_DATABASE = f'mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}?ssl_ca=/etc/ssl/certs/ca-certificates.crt'
 
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    engine = create_engine(URL_DATABASE)
 
-Base = declarative_base()
-# --------------------------------------------------------------------------
+    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
+    Base = declarative_base()
+    # --------------------------------------------------------------------------
 
-# # --------------------------- LOCAL CONNECTION ----------------------------
-# SQLALCHEMY_DATABASE_URL = "sqlite:///./mancaperros_app.db"
+else:
+    # --------------------------- LOCAL CONNECTION ----------------------------
+    SQLALCHEMY_DATABASE_URL = "sqlite:///./mancaperros_app.db"
 
-# engine = create_engine(
-#     SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
-# )
+    engine = create_engine(
+        SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
+    )
 
-# SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Base = declarative_base()
-# # -------------------------------------------------------------------------
+    Base = declarative_base()
+    # -------------------------------------------------------------------------

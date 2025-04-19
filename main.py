@@ -1,6 +1,8 @@
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import Depends, FastAPI, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
+from fastapi.responses import RedirectResponse
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 from datetime import timedelta, datetime, timezone
 
@@ -23,6 +25,17 @@ logger = logging.getLogger(__name__)
 app = FastAPI()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
+app = FastAPI()
+
+# # TODO condicionar este middleware para que solo se aplique en producción
+# @app.middleware("http")
+# async def force_https_middleware(request: Request, call_next):
+#     if request.url.scheme == "http":
+#         url = request.url.replace(scheme="https")
+#         return RedirectResponse(url=url)
+#     response = await call_next(request)
+#     return response
+
 origins = [
     "http://localhost",
     "http://localhost:8080",
@@ -31,9 +44,10 @@ origins = [
     "https://blue-water-043a88803.6.azurestaticapps.net"
 ]
 
+app.add_middleware(ProxyHeadersMiddleware)
+# app.add_middleware(HTTPSRedirectMiddleware)
 app.add_middleware(
     CORSMiddleware,
-    ProxyHeadersMiddleware,
     allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
@@ -312,7 +326,7 @@ def get_all_users(db: Session = Depends(get_db)):
 
 @app.get("/get_user_main_page_info/")
 def get_user_main_page(current_user: Annotated[models.User, Depends(get_current_user)], db: Session = Depends(get_db)):
-
+    
     user_from_email = crud.get_user_by_email(db, user_email=current_user.username)
     if not user_from_email:
         raise HTTPException(status_code=400, detail="User not found")

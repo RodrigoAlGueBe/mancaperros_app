@@ -239,7 +239,63 @@ async def end_routine(current_user: Annotated[models.User, Depends(get_current_u
     # Creamos el registro de rutina terminada
     crud.redord_end_rutine(db, user_from_email.user_id, exercise_record)
 
-    return {"detail": "Routine ended correctly"}    
+    return {"detail": "Routine ended correctly"}
+
+
+@app.post("/exercise_plan_global_full")
+async def create_exercise_plan_global_full(current_user: Annotated[models.User, Depends(get_current_user)], exercise_plan_global_full_dict:dict, db: Session = Depends(get_db)):
+    """
+    Function used for create a complete exercise plan global, 
+    with routines and exercises with a single request
+    """
+
+    # Obtenemos el usuario
+    user_from_email = crud.get_user_by_email(db, user_email=current_user.username)
+    if not user_from_email:
+        raise HTTPException(status_code=400, detail='User not found')
+    
+    # Creamos el plan de ejercicios global
+    exercise_plan_global = schemas.Exercise_plan_global_Create(
+        exercise_plan_name = exercise_plan_global_full_dict['exercise_plan_name'],
+        exercise_plan_type = exercise_plan_global_full_dict['exercise_plan_type'],
+        difficult_level = exercise_plan_global_full_dict['difficult_level']
+    )
+
+    exercise_plan_global = crud.create_exercise_plan_global(db=db, exercise_plan=exercise_plan_global, user_id=user_from_email.user_id)
+
+    # Creamos las rutinas globales
+    for rutine in exercise_plan_global_full_dict['rutines']:
+        rutine_global = schemas.Rutine_global_Create(
+            rutine_name = rutine['rutine_name'],
+            rutine_type = exercise_plan_global.exercise_plan_type,
+            rutine_group = rutine['rutine_group'],
+            rutine_category = rutine['rutine_category'],
+            exercise_plan_id = exercise_plan_global.exercise_plan_id,
+            rst_btw_exercises = rutine['rst_btw_exercises'],
+            rst_btw_rounds = rutine['rst_btw_rounds'],
+            difficult_level = rutine['difficult_level'],
+            rounds = rutine['rounds'],
+        )
+
+        rutine_global = crud.create_routine_global(db=db, rutine_gobal=rutine_global)
+
+        for exercise in rutine['exercises']:
+            exercise_global = schemas.Exercise_global_Create(
+                exercise_name = exercise['exercise_name'],
+                rep = exercise['rep'],
+                exercise_type = exercise['exercise_type'],
+                exercise_group = rutine_global.rutine_group,
+                rutine_id = rutine_global.rutine_id,
+                image = exercise['image']
+            )
+
+            crud.create_exercise_global(db=db, exercise_global=exercise_global)
+
+    
+    return {"detail": "Entire exercise plan created correctly"}
+
+
+    
 # ******************************************************************************************************************
 
 

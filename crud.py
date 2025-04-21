@@ -100,9 +100,9 @@ def create_exercise_plan_global(db: Session, exercise_plan: schemas.Exercise_pla
 #--------------------------------------------------------
 
 #------------------------- Rutine_global creation ------------------------
-def create_routine_global(db: Session, exercise_gobal: schemas.Rutine_global_Create, owner: int):
+def create_routine_global(db: Session, rutine_gobal: schemas.Rutine_global_Create):
     db_rutine_global = models.Rutine_global(
-        **exercise_gobal.dict()
+        **rutine_gobal.dict()
         )
     db.add(db_rutine_global)
     db.commit()

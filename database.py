@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker
 
 import urllib.parse
 
-mode_prod = True
+mode_prod = False
 
 if mode_prod:
     # --------------------------- REMOTE CONNECTION ----------------------------

@@ -14,6 +14,7 @@ import logging
 
 import crud, models, schemas
 from database import SessionLocal, engine
+from azure_control import wake_database
 
 from utils.functions import f_unit_type_finder, f_reps_to_seconds
 
@@ -293,9 +294,6 @@ async def create_exercise_plan_global_full(current_user: Annotated[models.User, 
 
     
     return {"detail": "Entire exercise plan created correctly"}
-
-
-    
 # ******************************************************************************************************************
 
 
@@ -584,6 +582,8 @@ async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     db: Session = Depends(get_db)
 ):
+    # wake_database()
+
     user_db = db.query(models.User).filter(models.User.email == form_data.username).first()
     if not user_db:
         user_db = db.query(models.User).filter(models.User.user_name == form_data.username).first()

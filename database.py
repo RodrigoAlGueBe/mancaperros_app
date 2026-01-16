@@ -1,57 +1,23 @@
-import os
+"""
+Database configuration module.
+
+This module configures SQLAlchemy database connection using centralized
+settings from config.py. No credentials are hardcoded here.
+"""
 
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-import urllib.parse
+from config import settings
 
-mode_prod = True
+# Import Base from the centralized location (used by all models)
+from infrastructure.database.models.base import Base
 
-if mode_prod:
-    # --------------------------- REMOTE CONNECTION ----------------------------
-    # RAILWAY
-    #db_url = os.getenv("DATABASE_URL")
-    DB_USER = urllib.parse.quote_plus('root')
-    DB_PASSWORD = urllib.parse.quote_plus('VCNvQsaYzvYGEfkvesRyleOBVuhcAQOB')
-    DB_HOST = 'yamanote.proxy.rlwy.net'
-    DB_NAME = 'railway'
-    DB_PORT = '19041'
+# Create engine using database URL from settings
+# SQLite requires check_same_thread=False for FastAPI compatibility
+engine = create_engine(
+    settings.database_url,
+    connect_args={"check_same_thread": False} if settings.use_sqlite else {}
+)
 
-    URL_DATABASE = f'mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}'
-
-    engine = create_engine(URL_DATABASE)
-
-    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-    Base = declarative_base()
-    # --------------------------------------------------------------------------
-    # # --------------------------- REMOTE CONNECTION ----------------------------
-    # # AZURE DEPRECATED
-    # DB_USER = urllib.parse.quote_plus('erynfitadmin') # @erynfit')
-    # DB_PASSWORD = urllib.parse.quote_plus('sgJW3a$@HfRmCx6')
-    # DB_HOST = 'erynfit.mysql.database.azure.com'
-    # DB_NAME = 'erynfit'
-    # DB_PORT = '3306'
-
-    # URL_DATABASE = f'mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}?ssl_ca=/etc/ssl/certs/ca-certificates.crt'
-
-    # engine = create_engine(URL_DATABASE)
-
-    # SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-    # Base = declarative_base()
-    # # --------------------------------------------------------------------------
-
-else:
-    # --------------------------- LOCAL CONNECTION ----------------------------
-    SQLALCHEMY_DATABASE_URL = "sqlite:///./mancaperros_app.db"
-
-    engine = create_engine(
-        SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
-    )
-
-    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-    Base = declarative_base()
-    # -------------------------------------------------------------------------
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

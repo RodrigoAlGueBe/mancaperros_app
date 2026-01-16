@@ -1,5 +1,96 @@
-README.txt
+# =============================================================================
+# Mancaperros App - Backend .gitignore
+# =============================================================================
+
+# ======================== ENVIRONMENT & SECRETS ==============================
+# CRITICAL: Never commit these files!
+.env
+.env.local
+.env.*.local
+*.env
+secrets.json
+credentials.json
+
+# ======================== PYTHON =============================================
+# Byte-compiled / optimized / DLL files
 __pycache__/
-alembic/__pycache__/
-mancaperros_env\Lib\site-packages\sqlalchemy\ext\__pycache__\
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# ======================== VIRTUAL ENVIRONMENTS ===============================
 mancaperros_env/
+venv/
+.venv/
+ENV/
+env/
+.env.bak/
+
+# ======================== DATABASES ==========================================
+*.db
+*.sqlite
+*.sqlite3
+
+# ======================== IDE & EDITORS ======================================
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+
+# ======================== TESTING ============================================
+.tox/
+.nox/
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+.hypothesis/
+
+# ======================== TYPE CHECKING ======================================
+.mypy_cache/
+.pytype/
+.pyre/
+
+# ======================== ALEMBIC ============================================
+alembic/__pycache__/
+
+# ======================== LOGS ===============================================
+*.log
+logs/
+
+# ======================== MISC ===============================================
+.DS_Store
+Thumbs.db
+README.txt

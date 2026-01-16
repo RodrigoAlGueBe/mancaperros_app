@@ -1,0 +1,82 @@
+# Bandit security configuration
+# Reference: https://bandit.readthedocs.io/en/latest/config.html
+
+assert_used:
+  skips: ['test*.py', '*_test*.py', 'tests/']
+
+blacklist_imports:
+  blacklist:
+    # Generic blacklisting tests
+    - name: marshal
+      message: "Deserialization with the marshal module is not recommended for security reasons."
+    - name: subprocess
+      message: "Consider using subprocess with shell=False and args as a list."
+    - name: pickle
+      message: "Pickle can be a security risk when deserializing untrusted data."
+
+blacklist_calls:
+  blacklist:
+    # Blacklist certain function calls
+    - name: input
+      message: "Use secure input handling"
+    - name: raw_input
+      message: "Use secure input handling"
+    - name: exec
+      message: "exec() is a security risk"
+    - name: eval
+      message: "eval() is a security risk"
+
+# Skips - tests/files to exclude from security scanning
+exclude_dirs:
+  - /test
+  - /tests
+  - /venv
+  - /.venv
+  - /migrations
+  - /alembic
+
+# Tests to run
+tests:
+  - assert_used
+  - assert_true_false
+  - blacklist_calls
+  - blacklist_imports
+  - hardcoded_password_defaults
+  - hardcoded_password_string
+  - hardcoded_sql_connections
+  - hardcoded_tmp_directory
+  - insecure_hash_functions
+  - insecure_random_functions
+  - jinja2_autoescape_false
+  - mako_templates
+  - paramiko_calls
+  - password_config_option_not_marked_secret
+  - request_with_no_cert_validation
+  - secure_random_string_generation
+  - sql_statements
+  - start_process_with_no_shell
+  - start_process_with_partial_path
+  - subprocess_popen_with_shell_equals_true
+  - subprocess_without_shell_equals_true
+  - telnet_connect
+  - tmp_file_q_and_w_on_user_provided_file_in_temporary_directory
+  - try_except_pass
+  - try_except_continue
+  - unsafe_yaml_load
+  - use_of_mako_templates
+  - use_of_pyyaml
+  - weak_cryptographic_key
+  - wildcard_injection
+
+# Exclude specific test IDs
+skips:
+  # Skip specific security checks if needed
+  # Example: B101 (assert used in test files)
+  []
+
+# Test confidence/severity levels to report
+# UNDEFINED, LOW, MEDIUM, HIGH
+severity_level: MEDIUM
+
+# Use these to customize output
+output_format: txt

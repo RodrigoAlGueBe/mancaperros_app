@@ -1,4 +1,4 @@
-"""alter tables User, Exercise_plan, Rutine, Exsercise
+"""alter tables User, Exercise_plan, Rutine, Exercise
 
 Revision ID: 29e535bc8e01
 Revises: 833907672c2f

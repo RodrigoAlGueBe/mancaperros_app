@@ -1,0 +1,63 @@
+[flake8]
+# Maximum line length
+max-line-length = 100
+
+# Exclude directories
+exclude =
+    .git,
+    __pycache__,
+    .venv,
+    venv,
+    build,
+    dist,
+    .tox,
+    .pytest_cache,
+    __pypackages__,
+    migrations,
+    alembic,
+    .eggs,
+    *.egg
+
+# Error codes to ignore
+# E501: Line too long (handled by formatter)
+# W503: Line break before binary operator
+# E203: Whitespace before ':'
+# E402: Module level import not at top of file (for type hints in comments)
+ignore =
+    E501,
+    W503,
+    E203,
+    E402
+
+# Select specific error codes
+# E: pycodestyle errors
+# W: pycodestyle warnings
+# F: PyFlakes
+# C: McCabe complexity
+select = E,W,F,C
+
+# Maximum McCabe complexity
+max-complexity = 10
+
+# Per-file ignores
+per-file-ignores =
+    __init__.py:F401,
+    tests/*:E501,F401,F841
+    migrations/*:E501,F401,F811
+    alembic/*:E501,F401,F811
+
+# Statistics for code quality
+statistics = True
+
+# Show source code for violations
+show-source = True
+
+# Format for output
+format = default
+
+# Docstring convention (Google style)
+# This requires flake8-google-docstrings plugin
+# docstring-convention = google
+
+# Logging format check
+# log-format-template = [%(name)s:%(levelname)s] %(message)s

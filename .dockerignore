@@ -1,3 +1,79 @@
-.git*
-**/*.pyc
-.venv/
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+*.log
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+mancaperros_env/
+
+# Documentation
+*.md
+README.txt
+MIGRATION_SUMMARY.md
+SECURITY_AUDIT_REPORT.md
+SECURITY_CHANGELOG.md
+SECURITY_PATCHES.py
+REFACTORING_PROGRESS.md
+Dockerfile.dev
+Dockerfile.prod
+
+# Build artifacts
+*.zip
+*.tar.gz
+
+# API collections
+Insomnia_*.json
+
+# Excel files
+*.xlsx
+*.xls
+
+# XML
+*.xml
+
+# Other
+node_modules/
+pycache/
+.cache/

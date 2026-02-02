@@ -2,7 +2,7 @@
 # ============================================
 
 # Stage 1: Builder
-FROM python:3.12-slim AS builder
+FROM python:3.11-slim AS builder
 
 # Instalar dependencias del sistema necesarias para compilar
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -23,7 +23,7 @@ RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
 
 # ============================================
 # Stage 2: Runtime
-FROM python:3.12-slim
+FROM python:3.11-slim
 
 # Metadatos
 LABEL maintainer="mancaperros_app"
@@ -31,7 +31,7 @@ LABEL description="FastAPI application for mancaperros_app"
 
 # Instalar dependencias de runtime necesarias
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libmysqlclient21 \
+    default-libmysqlclient-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Crear usuario no-root

@@ -1,0 +1,9 @@
+El proyecto react_mancaperro_app es un front-end desarrollado con react de la aplicación mancaperro. La aplicación mancaperro (aunque se puede cambiar de nombre en un futuro) es una aplicación web de rutinas de calistenia, donde mediante un login los usuarios acceden a su panel donde pueden hacer lo siguiente:
+- Elegir plan de ejercicios: El plan de ejercicios es un grupo de rutinas de ejercicios de calistenia, cada rutina contiene un grupo de ejercicios a realizar (como flexiones, dominadas, ...). Pulsando este botón el usuario podrá elegir qué plan de ejercicios quiere realizar
+- Elegir rutina: El usuario al pulsar este recuadro podrá elegir qué rutina hacer (normalmente son rutinas de espalda, pecho, piernas, ... esta opción está por si el usuario no quiere hacer la rutina que le toca)
+- Continuar rutina: Este recuadro permite al usuario continuar con la rutina que le toque, si por ejemplo en el plan de ejercicios se contempla que las rutinas tengan la siguiente secuencia: pecho-espalda-hombres-piernas y la última vez hizo pecho, entonces le saldrá la rutina de espalda.
+COMO FUNCIONA: La app se divide en 2 partes, backend y frontend:
+- backend: El backend se ha desarrollado con python usando el framework de fastApi, el cual conecta con una base de datos de tipo MySQL activado desde un docker web (el requirement_backend que te paso contiene las dependencias del mismo). El código del backend se encuentra alojado en azure (el cual me gustaría cambiar, quizás con ayuda de los agentes de ia), mientras que la base de datos la tengo alojada en el hosting de https://railway.com/. 
+- frontend: El frontend está desarrollado con react y alojado como web estática en azure también (la app web es https://blue-water-043a88803.6.azurestaticapps.net/)
+
+La carpeta "react_mancaperro_app" contiene todo el frontend

@@ -42,7 +42,8 @@ origins = [
     "http://localhost:8080",
     "http://localhost:3100",
     "http://localhost:5173",
-    "https://blue-water-043a88803.6.azurestaticapps.net"
+    "https://blue-water-043a88803.6.azurestaticapps.net",
+    "https://react-mancaperro-app.vercel.app/"
 ]
 
 app.add_middleware(ProxyHeadersMiddleware)

@@ -14,7 +14,8 @@ COPY . .
 EXPOSE 3100
 
 # Ejecutamos primero init_db.py y luego lanzamos el servidor
+# CMD python init_db.py && gunicorn main:app \
 CMD python init_db.py && gunicorn main:app \
-    --bind 0.0.0.0:3100 \
+    --bind 0.0.0.0:${PORT:-3100} \
     --worker-class uvicorn.workers.UvicornWorker \
     --log-level info

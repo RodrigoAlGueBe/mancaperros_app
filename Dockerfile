@@ -13,8 +13,10 @@ COPY . .
 
 EXPOSE 3100
 
-# Ejecutamos primero init_db.py y luego lanzamos el servidor
-CMD python init_db.py && gunicorn main:app \
-    --bind 0.0.0.0:3100 \
+# Run init_db.py first and then start the server
+# CMD python init_db.py && gunicorn main:app \
+CMD python init_db.py || echo "DB init skipped" && gunicorn main:app \
+    --bind 0.0.0.0:${PORT:-3100} \
     --worker-class uvicorn.workers.UvicornWorker \
+    --workers 1 \
     --log-level info

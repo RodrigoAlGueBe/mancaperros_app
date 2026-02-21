@@ -1,12 +1,20 @@
+import os
+from dotenv import load_dotenv
+
 from fastapi import Depends, FastAPI, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 from fastapi.responses import RedirectResponse
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 from datetime import timedelta, datetime, timezone
 
 from typing import Annotated, List
+
+load_dotenv()
 from sqlalchemy.orm import Session, joinedload
 from jose import JWTError, jwt
 import json
@@ -23,10 +31,14 @@ models.Base.metadata.create_all(bind=engine)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI()
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+# Rate limiter configuration
+limiter = Limiter(key_func=get_remote_address)
 
 app = FastAPI()
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 # # TODO condicionar este middleware para que solo se aplique en producción
 # @app.middleware("http")
@@ -46,20 +58,30 @@ origins = [
     "https://react-mancaperro-app.vercel.app"
 ]
 
+# Environment configuration
+ENV = os.getenv("ENV", "development")
+
 app.add_middleware(ProxyHeadersMiddleware)
-# app.add_middleware(HTTPSRedirectMiddleware)
+
+# HTTPS redirect only in production
+if ENV == "production":
+    app.add_middleware(HTTPSRedirectMiddleware)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "Accept"],
 )
 
-# Hashed algorithm and secret key configuration
-SECRET_KEY = "f4c961b34a2764b39914debb0b91c22664a44cf16094515f58ef88256291e5fe"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 180
+# JWT configuration from environment variables
+SECRET_KEY = os.getenv("SECRET_KEY")
+ALGORITHM = os.getenv("ALGORITHM", "HS256")
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
+
+if not SECRET_KEY:
+    raise ValueError("SECRET_KEY environment variable is required")
 
 # Dependency
 def get_db():
@@ -359,13 +381,17 @@ async def read_users_me(current_user: Annotated[str, Depends(get_current_user)],
     return user
 
 
-@app.get("/users/get_user_by_email/{user_email}")
-def get_user_by_email(user_email, db: Session = Depends(get_db)):
+@app.get("/users/get_user_by_email/{user_email}", response_model=schemas.User_Information)
+def get_user_by_email(
+    user_email: str,
+    current_user: Annotated[models.User, Depends(get_current_user)],
+    db: Session = Depends(get_db)
+):
     db_user = crud.get_user_by_email(db, user_email=user_email)
-    
+
     if not db_user:
-        raise HTTPException(status_code=400, detail="Email not registered")
-    
+        raise HTTPException(status_code=404, detail="User not found")
+
     return db_user
 
 
@@ -578,28 +604,25 @@ def get_next_routine(current_user: Annotated[models.User, Depends(get_current_us
 # ******************************************************************************************************************
 
 # ***************************************************** LOGIN ******************************************************
-@app.post("/token", response_model=schemas.Token)    #Rod 01/10/2023 new token url
+@app.post("/token", response_model=schemas.Token)
+@limiter.limit("3/5minutes")  # 3 attempts per 5 minutes per IP
 async def login_for_access_token(
+    request: Request,
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     db: Session = Depends(get_db)
 ):
-    # wake_database()
+    # Generic error to prevent user enumeration
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Invalid credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
 
-    user_db = db.query(models.User).filter(models.User.email == form_data.username).first()
-    if not user_db:
-        user_db = db.query(models.User).filter(models.User.user_name == form_data.username).first()
-
-    if not user_db:
-        raise HTTPException(status_code=400, detail="No user found")
-
-    user = crud.authenticate_user(db, form_data.username, form_data.password)    #Rod 21/10/2023 fake_users_db -> user_db
+    # Authenticate user (returns None if user not found OR password incorrect)
+    user = crud.authenticate_user(db, form_data.username, form_data.password)
 
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        raise credentials_exception
     
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = crud.create_access_token(

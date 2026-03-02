@@ -1,44 +1,41 @@
-import os
-from dotenv import load_dotenv
-
 from fastapi import Depends, FastAPI, HTTPException, status, Request
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
-from fastapi.responses import RedirectResponse
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
+from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
-from datetime import timedelta, datetime, timezone
+from datetime import datetime, timezone
 
 from typing import Annotated, List
 
-load_dotenv()
 from sqlalchemy.orm import Session, joinedload
-from jose import JWTError, jwt
 import json
 import logging
 
 import crud, models, schemas
-from database import SessionLocal, engine
+from database import engine
 from azure_control import wake_database
 
 from utils.functions import f_unit_type_finder, f_reps_to_seconds
+from core.config import settings
+from core.dependencies import get_db, get_current_user, oauth2_scheme
+from routers.auth import router as auth_router, limiter
+from routers.users import router as users_router
+from routers.exercises import router as exercises_router
 
 models.Base.metadata.create_all(bind=engine)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Rate limiter configuration
-limiter = Limiter(key_func=get_remote_address)
-
 app = FastAPI()
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+# Include routers
+app.include_router(auth_router)
+app.include_router(users_router)
+app.include_router(exercises_router)
 
 # # TODO condicionar este middleware para que solo se aplique en producción
 # @app.middleware("http")
@@ -49,151 +46,21 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 #     response = await call_next(request)
 #     return response
 
-origins = [
-    "http://localhost",
-    "http://localhost:8080",
-    "http://localhost:3100",
-    "http://localhost:5173",
-    "https://blue-water-043a88803.6.azurestaticapps.net",
-    "https://react-mancaperro-app.vercel.app"
-]
-
-# Environment configuration
-ENV = os.getenv("ENV", "development")
-
 app.add_middleware(ProxyHeadersMiddleware)
 
 # HTTPS redirect only in production
-if ENV == "production":
+if settings.is_production:
     app.add_middleware(HTTPSRedirectMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type", "Accept"],
 )
 
-# JWT configuration from environment variables
-SECRET_KEY = os.getenv("SECRET_KEY")
-ALGORITHM = os.getenv("ALGORITHM", "HS256")
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
-
-if not SECRET_KEY:
-    raise ValueError("SECRET_KEY environment variable is required")
-
-# Dependency
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]): #Rod 20/08/2023 
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-
-    try:
-        payload = jwt.decode(token=token, key=SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
-
-        if username is None:
-            raise credentials_exception
-        
-        token_data = models.TokenData(username=username)
-    except JWTError:
-        raise credentials_exception
-    
-    return token_data
-        
-
 # ****************************************************** POST ******************************************************
-@app.post("/users/")
-def create_user(user: schemas.User_Create, db: Session = Depends(get_db)):
-    """
-    Function used for user creation porpouses
-    """
-    if db.query(models.User).filter(models.User.email == user.email).first():
-        raise HTTPException(status_code=400, detail="Email already registered")
-    
-    if db.query(models.User).filter(models.User.user_name == user.user_name).first():
-        raise HTTPException(status_code=400, detail="Username already exist")
-    
-    user = crud.create_user(db=db, user=user)
-    if not user:
-        raise HTTPException(status_code=500, detail="Error in user creation, user have not been created")
-    
-    return HTTPException(status_code=200, detail="User created correctly")
-
-
-@app.post("/users/exercise_plans_global", response_model=schemas.Exercise_plan_global)
-async def create_exercise_plan_global(current_user: Annotated[models.User, Depends(get_current_user)], exercise_plan: schemas.Exercise_plan_global_Create, db: Session = Depends(get_db)):
-    
-    user_from_email = crud.get_user_by_email(db, user_email=current_user.username)
-    if not user_from_email:
-        raise HTTPException(status_code=400, detail="User not found")
-
-    if db.query(models.Exercise_plan_global).filter(models.Exercise_plan_global.exercise_plan_name == exercise_plan.exercise_plan_name).first():
-        raise HTTPException(
-            status_code=400,
-            detail="Exercise plan already exists"
-        )
-
-    return crud.create_exercise_plan_global(db=db, exercise_plan=exercise_plan, user_id=user_from_email.user_id)
-
-
-@app.post("/users/exercise_plans_global/routines_global", response_model=schemas.Rutine)
-def create_routine_for_exercise_plan(current_user: Annotated[models.User, Depends(get_current_user)], routine: schemas.Rutine_global_Create, db: Session = Depends(get_db)):
-    
-    user_from_email = crud.get_user_by_email(db, user_email=current_user.username)
-    if not user_from_email:
-        raise HTTPException(status_code=400, detail="User not found")
-    
-    exercise_plan = db.query(models.Exercise_plan_global).filter(models.Exercise_plan_global.exercise_plan_id == routine.exercise_plan_id).first()
-    if not exercise_plan:
-        raise HTTPException(status_code=404, detail="Exercise plan not found")
-    
-    if db.query(models.Rutine_global).filter(
-            models.Rutine_global.rutine_name == routine.rutine_name, 
-            models.Rutine_global.exercise_plan_id == routine.exercise_plan_id
-        ).first():
-        raise HTTPException(status_code=400, detail="Routine name already exists for this exercise plan")
-    
-    return crud.create_routine_global(db=db, routine=routine, owner=routine.exercise_plan_id)
-
-
-@app.post("/users/exercise_plans_global/routines_global/exercises_global", response_model=schemas.Exercise_global)
-def create_routine_for_exercise_plan(current_user: Annotated[models.User, Depends(get_current_user)], exercise: schemas.Exercise_global_Create, db: Session = Depends(get_db)):
-    
-    user_from_email = crud.get_user_by_email(db, user_email=current_user.username)
-    if not user_from_email:
-        raise HTTPException(status_code=400, detail="User not found")
-    
-    routine = db.query(models.Rutine_global).filter(models.Rutine_global.rutine_id == exercise.rutine_id).first()
-    if not routine:
-        raise HTTPException(status_code=404, detail="Routine not found")
-    
-    exercise_plan = db.query(models.Exercise_plan_global).filter(models.Exercise_plan_global.exercise_plan_id == routine.exercise_plan_id).first()
-    if not exercise_plan:
-        raise HTTPException(status_code=404, detail="Exercise plan not found")
-    
-
-    if db.query(models.Exsercise_global).filter(
-            models.Exercise_plan_global.exercise_plan_id == exercise_plan.exercise_plan_id, 
-            models.Rutine_global.rutine_id == routine.rutine_id, 
-            models.Exsercise_global.exercise_name == exercise.exercise_name
-        ).first():
-
-        raise HTTPException(status_code=400, detail="Exercise name already exists for this Routine")
-    
-    return crud.create_exercise_global(db=db, exercise_global=exercise)
-
-
 @app.post("/users/end_routine")
 async def end_routine(current_user: Annotated[models.User, Depends(get_current_user)], exercises_summary:dict, db: Session = Depends(get_db)):
     
@@ -364,66 +231,6 @@ def asign_exercise_plan_to_user(current_user: Annotated[models.User, Depends(get
 @app.get("/items/")
 async def read_items(token: Annotated[str, Depends(oauth2_scheme)]):
     return{"token": token}
-
-async def get_current_active_user(  #Rod 20/08/2023
-        current_user: Annotated[models.User, Depends(get_current_user)]
-):
-    return current_user
-
-
-@app.get("/users/me", response_model=schemas.User_Information)   #Rod 20/08/2023
-async def read_users_me(current_user: Annotated[str, Depends(get_current_user)], db: Session = Depends(get_db)):
-    
-    user = crud.get_user_by_email(db=db, user_email=current_user.username)
-    if not user:
-        raise HTTPException(status_code=400, detail="Email not registered")
-    
-    return user
-
-
-@app.get("/users/get_user_by_email/{user_email}", response_model=schemas.User_Information)
-def get_user_by_email(
-    user_email: str,
-    current_user: Annotated[models.User, Depends(get_current_user)],
-    db: Session = Depends(get_db)
-):
-    db_user = crud.get_user_by_email(db, user_email=user_email)
-
-    if not db_user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    return db_user
-
-
-@app.get("/get_users/")
-def get_all_users(db: Session = Depends(get_db)):
-    db_users = crud.get_users(db=db)
-    
-    if not db_users:
-        raise HTTPException(status_code=400, detail="Not users in aplication registered yet")
-    
-    return db_users
-
-
-@app.get("/get_user_main_page_info/")
-def get_user_main_page(current_user: Annotated[models.User, Depends(get_current_user)], db: Session = Depends(get_db)):
-    
-    user_from_email = crud.get_user_by_email(db, user_email=current_user.username)
-    if not user_from_email:
-        raise HTTPException(status_code=400, detail="User not found")
-
-    user_exercise_plans = db.query(models.Exercise_plan).filter(models.Exercise_plan.user_owner_id == user_from_email.user_id).first()
-
-    user_data = {
-        "user_name": user_from_email.user_name,
-        "email": user_from_email.email,
-        "user_image": user_from_email.user_image,
-        "exercise_plan_name": user_exercise_plans.exercise_plan_name if user_exercise_plans else None,
-        "exercise_plan_id": user_exercise_plans.exercise_plan_id if user_exercise_plans else None,
-    }
-
-    return user_data
-
 
 @app.get("/users/get_available_exercise_plans/{exercise_plan_type}", response_model=List[schemas.Exercise_plan_global_Response])
 def get_available_exercise_plans(exercise_plan_type, current_user: Annotated[models.User, Depends(get_current_user)], db: Session = Depends(get_db)):
@@ -601,33 +408,4 @@ def get_next_routine(current_user: Annotated[models.User, Depends(get_current_us
     }
 
     return next_routine_dict
-# ******************************************************************************************************************
-
-# ***************************************************** LOGIN ******************************************************
-@app.post("/token", response_model=schemas.Token)
-@limiter.limit("3/5minutes")  # 3 attempts per 5 minutes per IP
-async def login_for_access_token(
-    request: Request,
-    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-    db: Session = Depends(get_db)
-):
-    # Generic error to prevent user enumeration
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Invalid credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-
-    # Authenticate user (returns None if user not found OR password incorrect)
-    user = crud.authenticate_user(db, form_data.username, form_data.password)
-
-    if not user:
-        raise credentials_exception
-    
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = crud.create_access_token(
-        data={"sub": user.email}, expires_delta=access_token_expires, SECRET_KEY=SECRET_KEY, ALGORITHM=ALGORITHM
-    )
-
-    return {"access_token": access_token, "token_type": "bearer"}
 # ******************************************************************************************************************

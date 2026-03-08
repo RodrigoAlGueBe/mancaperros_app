@@ -15,7 +15,7 @@ EXPOSE 3100
 
 # Run init_db.py first and then start the server
 # CMD python init_db.py && gunicorn main:app \
-CMD python init_db.py || echo "DB init skipped" && gunicorn main:app \
+CMD alembic stamp head || echo "Migration skipped" && gunicorn main:app \
     --bind 0.0.0.0:${PORT:-3100} \
     --worker-class uvicorn.workers.UvicornWorker \
     --workers 1 \

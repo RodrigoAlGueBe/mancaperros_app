@@ -1,8 +1,15 @@
 import pymysql
 import os
+import logging
 
 import urllib.parse
 from dotenv import load_dotenv
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
 
 # --------------------------- REMOTE CONNECTION ----------------------------
 # DB_HOST = 'erynfit.mysql.database.azure.com'
@@ -30,7 +37,7 @@ def create_database_if_not_exists():
 
     with connection.cursor() as cursor:
         cursor.execute(f"CREATE DATABASE IF NOT EXISTS {DB_NAME};")
-        print(f"✔ Base de datos '{DB_NAME}' verificada o creada.")
+        logger.info(f"Base de datos '{DB_NAME}' verificada o creada.")
     connection.close()
 # --------------------------------------------------------------------------
 

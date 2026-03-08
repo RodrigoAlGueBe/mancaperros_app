@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 
 from typing import Annotated, List
 
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session, joinedload, selectinload
 import json
 import logging
 
@@ -25,7 +25,10 @@ from routers.exercises import router as exercises_router
 
 models.Base.metadata.create_all(bind=engine)
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 app = FastAPI()
@@ -74,11 +77,13 @@ async def end_routine(current_user: Annotated[models.User, Depends(get_current_u
         models.Exercise_plan.user_owner_id == user_from_email.user_id
     ).first()
 
-    # Obtenemos la rutina actual
-    last_routine = db.query(models.Rutine).filter(
-        models.Rutine.exercise_plan_id == last_exercise_plan.exercise_plan_id,
-        models.Rutine.rutine_group == exercises_summary["routine_group"]
-    ).first()
+    # Obtenemos la rutina actual con ejercicios precargados
+    last_routine = db.query(models.Rutine)\
+        .options(selectinload(models.Rutine.exercises))\
+        .filter(
+            models.Rutine.exercise_plan_id == last_exercise_plan.exercise_plan_id,
+            models.Rutine.rutine_group == exercises_summary["routine_group"]
+        ).first()
 
     # Actualizamos los ejercicios de la rutina
     exercises_receibed = exercises_summary["exercises"]
@@ -195,9 +200,12 @@ def asign_exercise_plan_to_user(current_user: Annotated[models.User, Depends(get
     if not user_from_email:
         raise HTTPException(status_code=400, detail="User not found")
     
-    # Get and clean exercise plan
+    # Get and clean exercise plan with eager loading
     exercise_plan_global = db.query(models.Exercise_plan_global)\
-                             .options(joinedload(models.Exercise_plan_global.rutines))\
+                             .options(
+                                 selectinload(models.Exercise_plan_global.rutines)
+                                 .selectinload(models.Rutine_global.exercises)
+                             )\
                              .filter(models.Exercise_plan_global.exercise_plan_id == exercise_plan.exercise_plan_id).first()
     
     if db.query(models.Exercise_plan).filter(models.Exercise_plan.user_owner_id == user_from_email.user_id).first():
@@ -271,10 +279,12 @@ async def get_asigned_routines(current_user: Annotated[models.User, Depends(get_
     if not user_from_email:
         raise HTTPException(status_code=400, detail="User not found")
     
-    # Obtenemos el plan de ejercicios actual
-    asigned_exercise_plan = db.query(models.Exercise_plan).filter(models.Exercise_plan.user_owner_id == user_from_email.user_id).first()
-    
-    return db.query(models.Rutine).filter(models.Rutine.exercise_plan_id == asigned_exercise_plan.exercise_plan_id).all()
+    # Obtenemos el plan de ejercicios actual con rutinas precargadas
+    asigned_exercise_plan = db.query(models.Exercise_plan)\
+        .options(selectinload(models.Exercise_plan.rutines))\
+        .filter(models.Exercise_plan.user_owner_id == user_from_email.user_id).first()
+
+    return asigned_exercise_plan.rutines if asigned_exercise_plan else []
 
 
 @app.get("/rutines/{rutine_id}/exercises")  # TODO adaptar a lo nuevo
@@ -287,7 +297,7 @@ async def get_all_exercises_for_rutine(rutine_id: int, current_user: Annotated[s
         )
     
     routine = db.query(models.Rutine).filter(models.Rutine.rutine_id == rutine_id).first()
-    exercises = db.query(models.Exsercise).filter(models.Exsercise.rutine_id == rutine_id).all()
+    exercises = db.query(models.Exercise).filter(models.Exercise.rutine_id == rutine_id).all()
 
     output_response = {
         "routine_group": routine.rutine_group,
@@ -345,10 +355,14 @@ def get_muscular_groups_for_exercise_plans(exercise_plan_name, current_user: Ann
     if not user_by_email:
         raise HTTPException(status_code=400, detail="User not found")
     
-    exercise_plan = db.query(models.Exercise_plan).filter(models.Exercise_plan.user_owner_id == user_by_email.user_id).first()
+    exercise_plan = db.query(models.Exercise_plan)\
+        .options(selectinload(models.Exercise_plan.rutines))\
+        .filter(models.Exercise_plan.user_owner_id == user_by_email.user_id).first()
 
-    routines = db.query(models.Rutine).filter(models.Rutine.exercise_plan_id == exercise_plan.exercise_plan_id).all()
-    routine_groups = list({"rutine_group": routine.rutine_group, "rutine_id": routine.rutine_id} for routine in routines) #TODO devolver lista de grupos con id de rutinas, diccionario de listas
+    if not exercise_plan:
+        return []
+
+    routine_groups = [{"rutine_group": routine.rutine_group, "rutine_id": routine.rutine_id} for routine in exercise_plan.rutines]
 
     return routine_groups
 
@@ -363,7 +377,7 @@ def get_next_routine(current_user: Annotated[models.User, Depends(get_current_us
                              .filter(models.Exercise_plan.user_owner_id == user_by_email.user_id).first()
     if not active_exercise_plan:
         raise HTTPException(status_code=404, detail="No active exercise plan found")
-    print("********************" + str(type(active_exercise_plan.routine_group_order)))
+    logger.debug(f"routine_group_order type: {type(active_exercise_plan.routine_group_order)}")
     
     try:
         routine_order = json.loads(active_exercise_plan.routine_group_order)

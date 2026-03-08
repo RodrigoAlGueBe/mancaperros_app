@@ -4,7 +4,7 @@ from sqlalchemy.orm import relationship
 from database import Base
 
 
-class Exsercise(Base):
+class Exercise(Base):
     __tablename__ = "exercises"
 
     exercise_id = Column(Integer, unique=True, index=True, primary_key=True)
@@ -18,7 +18,7 @@ class Exsercise(Base):
     exercise_owner = relationship("Rutine", back_populates="exercises")
 
 
-class Exsercise_global(Base):
+class Exercise_global(Base):
     __tablename__ = "exercises_global"
 
     exercise_id = Column(Integer, primary_key=True, index=True)

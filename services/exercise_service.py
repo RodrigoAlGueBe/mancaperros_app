@@ -13,11 +13,11 @@ class ExerciseService:
         email: str,
         exercise_plan: schemas.Exercise_plan_global_Create
     ) -> models.Exercise_plan_global:
-        user = crud.get_user_by_email(db, user_email=email)
+        user: models.User | None = crud.get_user_by_email(db, user_email=email)
         if not user:
             raise ValueError("User not found")
 
-        existing = db.query(models.Exercise_plan_global).filter(
+        existing: models.Exercise_plan_global | None = db.query(models.Exercise_plan_global).filter(
             models.Exercise_plan_global.exercise_plan_name == exercise_plan.exercise_plan_name
         ).first()
         if existing:
@@ -31,17 +31,17 @@ class ExerciseService:
         email: str,
         routine: schemas.Rutine_global_Create
     ) -> models.Rutine_global:
-        user = crud.get_user_by_email(db, user_email=email)
+        user: models.User | None = crud.get_user_by_email(db, user_email=email)
         if not user:
             raise ValueError("User not found")
 
-        exercise_plan = db.query(models.Exercise_plan_global).filter(
+        exercise_plan: models.Exercise_plan_global | None = db.query(models.Exercise_plan_global).filter(
             models.Exercise_plan_global.exercise_plan_id == routine.exercise_plan_id
         ).first()
         if not exercise_plan:
             raise LookupError("Exercise plan not found")
 
-        existing = db.query(models.Rutine_global).filter(
+        existing: models.Rutine_global | None = db.query(models.Rutine_global).filter(
             models.Rutine_global.rutine_name == routine.rutine_name,
             models.Rutine_global.exercise_plan_id == routine.exercise_plan_id
         ).first()
@@ -55,26 +55,26 @@ class ExerciseService:
         db: Session,
         email: str,
         exercise: schemas.Exercise_global_Create
-    ) -> models.Exsercise_global:
-        user = crud.get_user_by_email(db, user_email=email)
+    ) -> models.Exercise_global:
+        user: models.User | None = crud.get_user_by_email(db, user_email=email)
         if not user:
             raise ValueError("User not found")
 
-        routine = db.query(models.Rutine_global).filter(
+        routine: models.Rutine_global | None = db.query(models.Rutine_global).filter(
             models.Rutine_global.rutine_id == exercise.rutine_id
         ).first()
         if not routine:
             raise LookupError("Routine not found")
 
-        exercise_plan = db.query(models.Exercise_plan_global).filter(
+        exercise_plan: models.Exercise_plan_global | None = db.query(models.Exercise_plan_global).filter(
             models.Exercise_plan_global.exercise_plan_id == routine.exercise_plan_id
         ).first()
         if not exercise_plan:
             raise LookupError("Exercise plan not found")
 
-        existing = db.query(models.Exsercise_global).filter(
-            models.Exsercise_global.rutine_id == routine.rutine_id,
-            models.Exsercise_global.exercise_name == exercise.exercise_name
+        existing: models.Exercise_global | None = db.query(models.Exercise_global).filter(
+            models.Exercise_global.rutine_id == routine.rutine_id,
+            models.Exercise_global.exercise_name == exercise.exercise_name
         ).first()
         if existing:
             raise ValueError("Exercise name already exists for this Routine")

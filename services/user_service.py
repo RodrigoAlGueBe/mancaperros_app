@@ -1,8 +1,18 @@
+from typing import TypedDict
+
 from sqlalchemy.orm import Session
 
 import crud
 import models
 import schemas
+
+
+class MainPageInfo(TypedDict):
+    user_name: str
+    email: str
+    user_image: str | None
+    exercise_plan_name: str | None
+    exercise_plan_id: int | None
 
 
 class UserService:
@@ -15,7 +25,7 @@ class UserService:
         if db.query(models.User).filter(models.User.user_name == user.user_name).first():
             raise ValueError("Username already exist")
 
-        db_user = crud.create_user(db=db, user=user)
+        db_user: models.User | None = crud.create_user(db=db, user=user)
         if not db_user:
             raise RuntimeError("Error in user creation, user have not been created")
 
@@ -23,32 +33,32 @@ class UserService:
 
     @staticmethod
     def get_current_user_info(db: Session, email: str) -> models.User:
-        user = crud.get_user_by_email(db=db, user_email=email)
+        user: models.User | None = crud.get_user_by_email(db=db, user_email=email)
         if not user:
             raise ValueError("Email not registered")
         return user
 
     @staticmethod
     def get_user_by_email(db: Session, email: str) -> models.User:
-        user = crud.get_user_by_email(db, user_email=email)
+        user: models.User | None = crud.get_user_by_email(db, user_email=email)
         if not user:
             raise ValueError("User not found")
         return user
 
     @staticmethod
     def get_all_users(db: Session) -> list[models.User]:
-        users = crud.get_users(db=db)
+        users: list[models.User] = crud.get_users(db=db)
         if not users:
             raise ValueError("Not users in aplication registered yet")
         return users
 
     @staticmethod
-    def get_main_page_info(db: Session, email: str) -> dict:
-        user = crud.get_user_by_email(db, user_email=email)
+    def get_main_page_info(db: Session, email: str) -> MainPageInfo:
+        user: models.User | None = crud.get_user_by_email(db, user_email=email)
         if not user:
             raise ValueError("User not found")
 
-        exercise_plan = db.query(models.Exercise_plan).filter(
+        exercise_plan: models.Exercise_plan | None = db.query(models.Exercise_plan).filter(
             models.Exercise_plan.user_owner_id == user.user_id
         ).first()
 

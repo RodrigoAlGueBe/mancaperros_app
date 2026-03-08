@@ -1,4 +1,4 @@
-from sqlalchemy import Column, ForeignKey, Integer, String, Date, JSON
+from sqlalchemy import Column, ForeignKey, Index, Integer, String, Date, JSON
 from sqlalchemy.orm import relationship
 from datetime import date
 
@@ -8,6 +8,9 @@ import settings
 
 class Exercise_plan(Base):
     __tablename__ = "exercise_plans"
+    __table_args__ = (
+        Index("ix_exercise_plans_user_plan", "user_owner_id", "exercise_plan_id"),
+    )
 
     exercise_plan_id = Column(Integer, primary_key=True, index=True)
     exercise_plan_name = Column(String(255), unique=False, index=True, default="New exercise plan")

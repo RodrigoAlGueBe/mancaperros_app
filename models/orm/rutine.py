@@ -19,7 +19,7 @@ class Rutine(Base):
     difficult_level = Column(String(255), unique=False, index=True, default="New rutine difficult level")
 
     owner = relationship("Exercise_plan", back_populates="rutines")
-    exercises = relationship("Exsercise", back_populates="exercise_owner", cascade="all, delete-orphan")
+    exercises = relationship("Exercise", back_populates="exercise_owner", cascade="all, delete-orphan")
 
 
 class Rutine_global(Base):
@@ -37,4 +37,4 @@ class Rutine_global(Base):
     difficult_level = Column(String(255), nullable=False, unique=False, index=True, default="New rutine difficult level")
 
     owner = relationship("Exercise_plan_global", back_populates="rutines")
-    exercises = relationship("Exsercise_global", back_populates="exercise_owner", cascade="all, delete-orphan")
+    exercises = relationship("Exercise_global", back_populates="exercise_owner", cascade="all, delete-orphan")

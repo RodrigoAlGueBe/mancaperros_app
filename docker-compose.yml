@@ -6,6 +6,8 @@ services:
     image: mysql:8.0
     container_name: mancaperros_mysql
     restart: always
+    ports:
+      - "3306:3306"
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: mydb
@@ -33,7 +35,9 @@ services:
       DB_NAME: mydb
       DB_USER: myuser
       DB_PASSWORD: mypassword
+      SECRET_KEY: f4c961b34a2764b39914debb0b91c22664a44cf16094515f58ef88256291e5fe
     restart: always
+    command: uvicorn main:app --host 0.0.0.0 --port 3100 --reload # Comment in prod
 
 volumes:
   mysql_data:

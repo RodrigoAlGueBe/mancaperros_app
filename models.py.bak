@@ -1,5 +1,5 @@
 from sqlalchemy import Column, ForeignKey, Integer, String, DateTime, Date, JSON
-from sqlalchemy.orm import relationship, declarative_base
+from sqlalchemy.orm import relationship
 
 from database import Base
 from pydantic import BaseModel
@@ -8,8 +8,6 @@ import settings
 
 from datetime import datetime, date, timezone
 
-
-Base = declarative_base()
 
 class User(Base):
     __tablename__ = "users"

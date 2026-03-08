@@ -1,10 +1,8 @@
-from datetime import datetime, timedelta
-from sqlalchemy.orm import Session
-
-from passlib.context import CryptContext
-from jose import jwt
+from datetime import datetime
+from sqlalchemy.orm import Session, selectinload
 
 import models, schemas
+from core.security import verify_password, get_password_hash, create_access_token
 
 
 fake_users_db = {   #Rod 20/08/2023 added fake user for testing propouses 
@@ -50,8 +48,8 @@ def get_rutine_info(db: Session, rutine_id: int):
 #----------------------- Exercise -----------------------
 def get_exercise_info(db: Session, exercise_id: int):
     return db.query(
-        models.Exsercise
-    ).filter(models.Exsercise.exercise_id == exercise_id)
+        models.Exercise
+    ).filter(models.Exercise.exercise_id == exercise_id)
 #--------------------------------------------------------
 #*******************************************************************************
 
@@ -73,7 +71,7 @@ def create_user(db: Session, user: schemas.User_Create):
 
 #------------------- Exercise creation ---------------------------------------------
 def create_exercise(db: Session, exercise: schemas.Exercise_Create, rutine_id: int):
-    db_exercise = models.Exsercise(
+    db_exercise = models.Exercise(
         **exercise.dict(),
         #TODO image,
         rutine_id = rutine_id
@@ -113,7 +111,7 @@ def create_routine_global(db: Session, rutine_gobal: schemas.Rutine_global_Creat
 
 #----------------------------- Exercise_global creation ----------------------------
 def create_exercise_global(db: Session, exercise_global: schemas.Exercise_Create):
-    db_exercise = models.Exsercise_global(
+    db_exercise = models.Exercise_global(
         **exercise_global.dict(),
         )
     db.add(db_exercise)
@@ -184,7 +182,7 @@ def asign_exercise_plan(db: Session, exercise_plan: schemas.Exercise_plan_Create
         
         # Copiar los ejercicios de la rutina del Exercise_plan_global al nuevo Exercise_plan
         for exercise_global in rutine_global.exercises:
-            db_exercise = models.Exsercise(
+            db_exercise = models.Exercise(
                 exercise_name = exercise_global.exercise_name,
                 rep = exercise_global.rep,
                 exercise_type = exercise_global.exercise_type,
@@ -221,8 +219,8 @@ def delete_exercise_plan_for_user(db: Session, user_id: int):
     
     for routine in routines:
         # Delete all exercises associated with the routine
-        db.query(models.Exsercise).filter(
-            models.Exsercise.rutine_id == routine.rutine_id
+        db.query(models.Exercise).filter(
+            models.Exercise.rutine_id == routine.rutine_id
         ).delete()
     
     # Delete the routine
@@ -271,37 +269,16 @@ def fake_hash_password(password: str):
     return "fakehashed" + password
 
 
-# ************************** For logging purposes **************************
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
-
-def get_password_hash(password):
-    return pwd_context.hash(password)
-
+# ************************** For authentication **************************
 def authenticate_user(db, username: str, password: str):
     user = get_user_by_username(db, username)
     if not user:
         user = get_user_by_email(db, username)
-    
+
     if not user:
         return False
-    
+
     if not verify_password(password, user.hashed_password):
         return False
     return user
-
-def create_access_token(data: dict, expires_delta: timedelta, SECRET_KEY: str, ALGORITHM: str| None = None):
-    to_encode = data.copy()
-
-    if expires_delta:
-        expire = datetime.utcnow() + expires_delta
-    else:
-        expire = datetime.utcnow() + timedelta(minutes=15)
-    
-    to_encode.update({"exp": expire})
-    encode_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-
-    return encode_jwt
 #***************************************************************************

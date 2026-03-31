@@ -38,8 +38,7 @@ services:
       DB_PASSWORD: mypassword
       SECRET_KEY: f4c961b34a2764b39914debb0b91c22664a44cf16094515f58ef88256291e5fe
     restart: always
-    command: python -m debugpy --listen 0.0.0.0:5678
-             -m uvicorn main:app --host 0.0.0.0 --port 3100
+    command: uvicorn main:app --host 0.0.0.0 --port 3100 --reload # Comment in prod
 
 volumes:
   mysql_data:

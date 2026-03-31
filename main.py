@@ -154,7 +154,8 @@ async def create_exercise_plan_global_full(current_user: Annotated[models.User, 
     exercise_plan_global = schemas.Exercise_plan_global_Create(
         exercise_plan_name = exercise_plan_global_full_dict['exercise_plan_name'],
         exercise_plan_type = exercise_plan_global_full_dict['exercise_plan_type'],
-        difficult_level = exercise_plan_global_full_dict['difficult_level']
+        difficult_level = exercise_plan_global_full_dict['difficult_level'],
+        routine_group_order = exercise_plan_global_full_dict['routine_group_order']
     )
 
     exercise_plan_global = crud.create_exercise_plan_global(db=db, exercise_plan=exercise_plan_global, user_id=user_from_email.user_id)

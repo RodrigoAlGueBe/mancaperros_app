@@ -29,6 +29,7 @@ services:
         condition: service_healthy
     ports:
       - "3100:3100"
+      - "5678:5678"
     environment:
       DB_HOST: db
       DB_PORT: 3306

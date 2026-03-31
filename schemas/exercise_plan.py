@@ -52,6 +52,7 @@ class Exercise_plan_global_Response(Exercise_plan_global_Base):
 class Exercise_plan_global_Create(Exercise_plan_global_Base):
     exercise_plan_type: str | None = None
     difficult_level: str | None = None
+    routine_group_order: str | None = None
 
 
 class Exercise_plan_global(Exercise_plan_global_Base):

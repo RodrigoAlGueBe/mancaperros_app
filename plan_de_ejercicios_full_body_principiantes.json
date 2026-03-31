@@ -1,0 +1,214 @@
+{
+	"exercise_plan_name": "Fall of summer",
+	"exercise_plan_type": "circuit",
+	"difficult_level": "easy",
+	"routine_group_order": "[\"Día 1\", \"Día 2\", \"Día 3\", \"Día 4\"]",
+	"rutines": [
+		{
+			"rutine_name": "DESPERTAR DE LA LUZ",
+			"rutine_group": "Día 1",
+			"rutine_category": "",
+			"rounds": 4,
+			"rst_btw_exercises": "30s",
+			"rst_btw_rounds": "3 min",
+			"difficult_level": "easy",
+			"exercises": [
+				{
+					"exercise_name": "Plancha",
+					"rep": "30",
+					"exercise_type": "push-isometric-time",
+					"image": "https://i.ibb.co/yFWDGFVQ/plank.png"
+				},
+				{
+					"exercise_name": "sentadillas",
+					"rep": "8",
+					"exercise_type": "push-positive",
+					"image": "https://i.ibb.co/WN1MYvb9/sentadillas.png"
+				},
+				{
+					"exercise_name": "zancadas",
+					"rep": "8",
+					"exercise_type": "push-positive-each",
+					"image": "https://i.ibb.co/wrZWr6PZ/zancada-en-sitio.png"
+				},
+				{
+					"exercise_name": "Elevaciones de piernas",
+					"rep": "8",
+					"exercise_type": "push-positive",
+					"image": "https://i.ibb.co/rRjfHRw5/legs-raise.png"
+				},
+				{
+					"exercise_name": "Escalada montaña",
+					"rep": "20",
+					"exercise_type": "push-positive",
+					"image": "https://i.ibb.co/G3Q7ZV5s/mountain-climbers.png"
+				},
+				{
+					"exercise_name": "Flexiones en pica",
+					"rep": "8",
+					"exercise_type": "push-positive",
+					"image": "https://i.ibb.co/QFvC5C3N/flexiones-en-pica.png"
+				}
+			]
+		},
+		{
+			"rutine_name": "NIEBLA",
+			"rutine_group": "Día 2",
+			"rutine_category": "",
+			"rounds": 4,
+			"rst_btw_exercises": "30s",
+			"rst_btw_rounds": "3 min",
+			"difficult_level": "easy",
+			"exercises": [
+				{
+					"exercise_name": "Chin up cerrada",
+					"rep": "7",
+					"exercise_type": "pull-positive",
+					"image": "https://i.ibb.co/Gf61SkCG/chin-up-cerrada.png"
+				},
+				{
+					"exercise_name": "Pull ups",
+					"rep": "5",
+					"exercise_type": "pull-positive",
+					"image": "https://i.ibb.co/ksSm5LhZ/pull-up.png"
+				},
+				{
+					"exercise_name": "Fondos en paralelas",
+					"rep": "6",
+					"exercise_type": "push-positive",
+					"image": "https://i.ibb.co/k0wtj0c/exercise-3.png"
+				},
+				{
+					"exercise_name": "Flexiones",
+					"rep": "15",
+					"exercise_type": "push-positive",
+					"image": "https://i.ibb.co/cttnKvG/exercise-1.png"
+				},
+				{
+					"exercise_name": "Levantamiento de piernas en barra",
+					"rep": "5",
+					"exercise_type": "push-positive",
+					"image": "https://i.ibb.co/7NrDqJzr/leg-raises.png"
+				},
+				{
+					"exercise_name": "Sentadillas con salto",
+					"rep": "9",
+					"exercise_type": "psuh-positive",
+					"image": "https://i.ibb.co/RpRkYTFn/sentadillas-salto.png"
+				},
+				{
+					"exercise_name": "Dominadas australianas",
+					"rep": "15",
+					"exercise_type": "pull-positive",
+					"image": "https://i.ibb.co/zT5WwS3R/dominada-australiana.png"
+				}
+			]
+		},
+		{
+			"rutine_name": "ATISMOS DE GLORIA",
+			"rutine_group": "Día 3",
+			"rutine_category": "",
+			"rounds": 4,
+			"rst_btw_exercises": "30s",
+			"rst_btw_rounds": "3 min",
+			"difficult_level": "easy",
+			"exercises": [
+				{
+					"exercise_name": "Flexiones abiertas",
+					"rep": "20",
+					"exercise_type": "push-positive",
+					"image": "https://i.ibb.co/0RXVvbWW/wide-push-ups.png"
+				},
+				{
+					"exercise_name": "Mountain climbers",
+					"rep": "20",
+					"exercise_type": "pull-positive",
+					"image": "https://i.ibb.co/G3Q7ZV5s/mountain-climbers.png"
+				},
+				{
+					"exercise_name": "Wall sit",
+					"rep": "30",
+					"exercise_type": "push-isometric-time",
+					"image": "https://i.ibb.co/jvc0c8vx/sentadilla-isometrica.png"
+				},
+				{
+					"exercise_name": "Flexiones con palmada",
+					"rep": "15",
+					"exercise_type": "push-positive",
+					"image": "https://i.ibb.co/1GzfjGcv/push-ups-slap.png"
+				},
+				{
+					"exercise_name": "superman",
+					"rep": "20",
+					"exercise_type": "push-isometric-time",
+					"image": "https://i.ibb.co/v9hSqXJ/superman.png"
+				},
+				{
+					"exercise_name": "sentadillas",
+					"rep": "30",
+					"exercise_type": "push-positive",
+					"image": "https://i.ibb.co/WN1MYvb9/sentadillas.png"
+				},
+				{
+					"exercise_name": "plancha",
+					"rep": "30",
+					"exercise_type": "push-isometric-time",
+					"image": "https://i.ibb.co/yFWDGFVQ/plank.png"
+				}
+			]
+		},
+		{
+			"rutine_name": "OLYMPO",
+			"rutine_group": "Día 4",
+			"rutine_category": "",
+			"rounds": 4,
+			"rst_btw_exercises": "30s",
+			"rst_btw_rounds": "3 min",
+			"difficult_level": "medium",
+			"exercises": [
+				{
+					"exercise_name": "Carrera",
+					"rep": "100",
+					"exercise_type": "push-positive",
+					"image": "https://i.ibb.co/RpfkMpd7/run.png"
+				},
+				{
+					"exercise_name": "Fondos en paralelas",
+					"rep": "5",
+					"exercise_type": "push-positive",
+					"image": "https://i.ibb.co/PZjnbDPL/fondos.png"
+				},
+				{
+					"exercise_name": "Jumping jacks",
+					"rep": "45",
+					"exercise_type": "push-positive-time",
+					"image": "https://i.ibb.co/bgT3XwYX/jumping-jacks.png"
+				},
+				{
+					"exercise_name": "Flexiones",
+					"rep": "8",
+					"exercise_type": "push-positive",
+					"image": "https://i.ibb.co/cttnKvG/exercise-1.png"
+				},
+				{
+					"exercise_name": "Elevaciones de rodillas",
+					"rep": "30",
+					"exercise_type": "pull-positive-time",
+					"image": "https://i.ibb.co/jkWz8835/high-knees.png"
+				},
+				{
+					"exercise_name": "Mountain climbers",
+					"rep": "30",
+					"exercise_type": "pull-positive-time",
+					"image": "https://i.ibb.co/G3Q7ZV5s/mountain-climbers.png"
+				},
+				{
+					"exercise_name": "Elevaciones de rodillas",
+					"rep": "20",
+					"exercise_type": "push-positive-time",
+					"image": "https://i.ibb.co/yFWDGFVQ/plank.png"
+				}
+			]
+		}
+	]
+}
